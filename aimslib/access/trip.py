@@ -1,10 +1,15 @@
 import requests
 from bs4 import BeautifulSoup #type: ignore
 from typing import List
+import datetime as DT
+import re
 
 from aimslib.access.connect import REQUEST_TIMEOUT
-from aimslib.common.types import BadTripDetails, NoTripDetails
-
+from aimslib.common.types import (
+    BadTripDetails,
+    NoTripDetails,
+    BadAIMSSector)
+from aimslib.common.types import Sector, SectorFlags, CrewMember
 
 AimsSector = List[str]
 AimsDuty = List[AimsSector]
@@ -100,3 +105,78 @@ def parse_trip_details(html:str) -> List[AimsDuty]:
             aims_duties.append(aims_duty)
     if aims_duties[-1] == []: del aims_duties[-1]
     return aims_duties
+
+
+def sector(aims_sector: AimsSector, date: DT.date
+) -> Sector:
+    """Convert an AimsSector object into a Sector object.
+
+    :param aims_sector: An AimsSector object, as described in the
+        documentation forparse_trip_details().
+    :param date: The date of the sector
+
+    :return: A Sector object.
+
+    Standby and training duties that form part of a trip are recorded
+    by AIMS as quasi-sectors. A quasi-sector is identified by its
+    flight number being wrapped in square brackets, e.g. [esby]. AIMS
+    does not update quasi-sectors with actual times.
+
+    The pax flag indicates a postioning sector. If reg is None, it is
+    ground positioning. AIMS does not update ground positioning
+    sectors with actual times.
+
+    Accessing AIMS crew member details is relatively slow and the
+    planned crew for a sector tends to be in a continuous state of
+    flux. Therefore, the crewlist field is only filled for sectors in
+    the past; future sectors have an empty list.
+    """
+    try:
+        id_, flightnum, from_, to, sched_off, sched_on = aims_sector[:6]
+    except:
+        raise BadAIMSSector(str(aims_sector))
+    off, on, reg = (None,) * 3
+    pax = False
+    for field in aims_sector[6:]:
+        if re.match(r"A\d{4}", field):
+            if not off:
+                off = field[1:]
+            else:
+                on = field[1:]
+        elif re.match(r"\w{1,2}-\w{3,5}", field):
+            reg = field
+        elif field == "PAX":
+            pax = True
+    try:
+        sched_off, sched_on = (X + "+0" if len(X) == 4 else X
+                               for X in (sched_off, sched_on))
+        sched_off_t, sched_on_t = (DT.datetime.strptime(X[:4], "%H%M").time()
+                                   for X in (sched_off, sched_on))
+        sched_off_dt = (DT.datetime.combine(date, sched_off_t)
+                        + DT.timedelta(days=int(sched_off[5])))
+        sched_on_dt = (DT.datetime.combine(date, sched_on_t)
+                       + DT.timedelta(days=int(sched_on[5])))
+        #actual times don't have +1 for after midnight, so use
+        #proximity to schedule
+        off_dt, on_dt = None, None
+        if on:
+            off_t, on_t = (DT.datetime.strptime(X[:4], "%H%M").time()
+                           for X in (off, on))
+            off_dt, on_dt = (DT.datetime.combine(date, X)
+                             for X in (off_t, on_t))
+            if sched_off_dt - off_dt > DT.timedelta(days=1) / 2:
+                off_dt += DT.timedelta(days=1)
+            if sched_on_dt - on_dt > DT.timedelta(days=1) / 2:
+                on_dt += DT.timedelta(days=1)
+    except:
+        raise BadAIMSSector(str(date) + ", " + str(aims_sector))
+    #only get crewlist if we have actual times and were not positioning
+    crewlist: List[CrewMember] = []
+    if on and not pax:
+#        crewlist = aimslib.access.crewlist.crewlist()
+        pass
+    flags = SectorFlags.POSITIONING if pax else 0
+    if not id_: flags = flags | SectorFlags.GROUND_DUTY
+    return Sector(flightnum, from_, to,
+                  sched_off_dt, sched_on_dt, off_dt, on_dt,
+                  reg, flags, crewlist)

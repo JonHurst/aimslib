@@ -3,19 +3,27 @@ import datetime as DT
 import enum
 
 
+class CrewMember(T.NamedTuple):
+    name: str
+    role: str
+
+
 class SectorFlags(enum.Enum):
     POSITIONING = enum.auto()
     GROUND_DUTY = enum.auto()
 
 
 class Sector(T.NamedTuple):
-    start: DT.datetime
-    finish: DT.datetime
     name: str
     from_: T.Optional[str]
     to: T.Optional[str]
+    sched_start: DT.datetime
+    sched_finish: DT.datetime
+    act_start: DT.datetime
+    act_finish: DT.datetime
     reg: T.Optional[str]
     flags: SectorFlags
+    crew: T.List[CrewMember]
 
 
 class Duty(T.NamedTuple):
