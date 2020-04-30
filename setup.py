@@ -13,6 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/JonHurst/aimslib",
     packages=setuptools.find_packages(),
+    install_requires=['Beautifulsoup4', 'requests', 'python-dateutil'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
