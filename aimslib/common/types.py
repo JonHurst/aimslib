@@ -34,6 +34,11 @@ class LogonError(AIMSException):
     pass
 
 
+class UsernamePasswordError(AIMSException):
+    """Username or password incorrect."""
+    pass
+
+
 class BadBriefRoster(AIMSException):
     """Brief Roster parse failed."""
     pass
