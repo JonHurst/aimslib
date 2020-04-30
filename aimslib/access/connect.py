@@ -53,7 +53,7 @@ def _login(
     if r.text.find("Please log out and try again.") != -1:
         if not recurse: raise AT.LogonError
         logout(session, base_url)
-        _login(session, server_url, username, password, False)
+        base_url = _login(session, server_url, username, password, False)
     if r.text.find("Please re-enter your Credentials and try again") != -1:
         raise AT.UsernamePasswordError
     return base_url
