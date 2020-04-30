@@ -8,8 +8,9 @@ from aimslib.access.connect import REQUEST_TIMEOUT
 from aimslib.common.types import (
     BadTripDetails,
     NoTripDetails,
-    BadAIMSSector)
-from aimslib.common.types import Sector, SectorFlags, CrewMember
+    BadAIMSSector,
+    BadAIMSDuty)
+from aimslib.common.types import Sector, SectorFlags, CrewMember, Duty
 
 AimsSector = List[str]
 AimsDuty = List[AimsSector]
@@ -180,3 +181,36 @@ def sector(aims_sector: AimsSector, date: DT.date
     return Sector(flightnum, from_, to,
                   sched_off_dt, sched_on_dt, off_dt, on_dt,
                   reg, flags, crewlist)
+
+
+
+def duty(aims_duty: AimsDuty, start_date: DT.date, trip_id: str) -> Duty:
+    """Create a Duty object from an AimsDuty object.
+
+    :param aims_duty: An AimsDuty object to convert
+    :param start_date: The start date of the duty.
+    :param trip_id: The id of the trip that the duty belongs to.
+
+    :return: A Duty object.
+    """
+    try:
+        trip_day = int(aims_duty[0][7]) - 1
+        date = start_date + DT.timedelta(days=trip_day)
+        #fix for AIMS bug where end of duty can have non-existent time 24:00
+        if aims_duty[-1][-1] == "24:00": aims_duty[-1][-1] = "00:00"
+        duty_end_time = DT.datetime.strptime(
+            aims_duty[-1][-1], "%H:%M").time()
+        index = -2 if len(aims_duty) == 1 else -1
+        duty_start_time = DT.datetime.strptime(
+            aims_duty[0][index], "%H:%M").time()
+    except:
+        raise BadAIMSDuty(str(aims_duty))
+    duty_start, duty_end = (
+        DT.datetime.combine(date, X)
+        for X in (duty_start_time, duty_end_time))
+    if duty_end < duty_start:
+        duty_end += DT.timedelta(days=1)
+    sectors = [] # type: List[Sector]
+    for aims_sector in aims_duty:
+        sectors.append(sector(aims_sector, date))
+    return Duty(duty_start, duty_end, trip_id, sectors)

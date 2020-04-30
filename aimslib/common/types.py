@@ -29,6 +29,7 @@ class Sector(T.NamedTuple):
 class Duty(T.NamedTuple):
     start: DT.datetime
     finish: DT.datetime
+    trip_id: str
     sectors: T.List[Sector]
 
 
