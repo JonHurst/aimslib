@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """
-This module provides two functions:
+This module provides basic functions for access to AIMS server:
 
 connect - for connecting to an AIMS server
 logout - for logging out of an AIMS server
+changes - for checking for changes notification
 """
 
 import typing as T
@@ -98,3 +99,17 @@ def logout(session: requests.Session, base_url: str) -> None:
     session.post(base_url + "perinfo.exe/AjAction?LOGOUT=1",
                  {"AjaxOperation": "0"},
                  timeout=REQUEST_TIMEOUT)
+
+
+def changes(session: requests.Session, base_url: str) -> bool:
+    """Check for changes notification.
+
+    :param session: The session object returned from connect.
+    :param base_url: The base url returned from connect.
+
+    :return: True if change notification was detected, else False
+    """
+    r = session.get(base_url + "perinfo.exe/index",
+                    timeout=REQUEST_TIMEOUT)
+    no_changes_marker = '\r\nvar notification = Trim("");\r\n'
+    return  True if r.text.find(no_changes_marker) == -1 else False
