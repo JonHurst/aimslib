@@ -4,15 +4,15 @@ import os
 import datetime as DT
 
 from aimslib.access.connect import PostFunc
-from aimslib.common.types import TripID, Duty
+from aimslib.common.types import TripID, Duty, CrewMember
 import aimslib.access.trip as Trip
+import aimslib.access.crew as Crew
 
-class TripCache:
+class Cache:
 
     def __init__(self, filename:str, post: PostFunc):
         self.pickle_file = filename
         self.post_func = post
-        self.cache: Dict[str, List[Duty]] = {}
         try:
             os.mkdir(os.path.dirname(filename))
         except FileExistsError:
@@ -27,6 +27,13 @@ class TripCache:
     def __del__(self):
         with open(self.pickle_file, "wb") as f:
             pickle.dump(self.cache, f)
+
+
+class TripCache(Cache):
+
+    def __init__(self, filename:str, post:PostFunc):
+        self.cache: Dict[str, List[Duty]] = {}
+        Cache.__init__(self, filename,  post)
 
 
     def trip(self, trip_id: TripID) -> List[Duty]:
@@ -56,3 +63,24 @@ class TripCache:
             print(trip_id, "all actuals recorded, using cached version")
             return False #cached version finalised
         return True
+
+
+
+class CrewlistCache(Cache):
+
+    def __init__(self, filename:str, post: PostFunc):
+        self.cache: Dict[str, List[CrewMember]] = {}
+        Cache.__init__(self, filename, post)
+
+
+    def crewlist(self, crewlistID: str) -> List[CrewMember]:
+        if crewlistID in self.cache:
+            return self.cache[crewlistID]
+        crewlist = Crew.crewlist(Crew.retrieve(self.post_func, crewlistID))
+        #first part of identifier is an AIMS data (days since 1980-01-01)
+        aims_date = crewlistID.split(",", 1)[0]
+        date = DT.date(1980, 1, 1) + DT.timedelta(days=int(aims_date))
+        #only cache crewlists from more than 2 days ago
+        if DT.date.today() - date > DT.timedelta(days=2):
+            self.cache[crewlistID] = crewlist
+        return crewlist
