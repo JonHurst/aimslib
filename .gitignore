@@ -1,0 +1,3 @@
+aimslib.egg-info/
+aimslib/*/__pycache__/
+aimslib/*/.mypy_cache/
