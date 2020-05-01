@@ -1,17 +1,13 @@
-import requests
 from bs4 import BeautifulSoup #type: ignore
-from typing import List, Tuple, NamedTuple
+from typing import List
 import datetime as DT
 import re
 
 from aimslib.access.connect import PostFunc
 from aimslib.common.types import (
-    TripID,
-    BadTripDetails,
-    NoTripDetails,
-    BadAIMSSector,
-    BadAIMSDuty)
-from aimslib.common.types import Sector, SectorFlags, CrewMember, Duty
+    TripID, Sector, SectorFlags, Duty,
+    BadTripDetails, NoTripDetails, BadAIMSSector, BadAIMSDuty,
+)
 
 AimsSector = List[str]
 AimsDuty = List[AimsSector]
