@@ -104,7 +104,7 @@ def parse(html:str) -> List[AimsDuty]:
     return aims_duties
 
 
-def sector(aims_sector: AimsSector, date: DT.date
+def _sector(aims_sector: AimsSector, date: DT.date
 ) -> Sector:
     """Convert an AimsSector object into a Sector object.
 
@@ -167,20 +167,15 @@ def sector(aims_sector: AimsSector, date: DT.date
                 on_dt += DT.timedelta(days=1)
     except:
         raise BadAIMSSector(str(date) + ", " + str(aims_sector))
-    #only get crewlist if we have actual times and were not positioning
-    crewlist: List[CrewMember] = []
-    if on and not pax:
-#        crewlist = aimslib.access.crewlist.crewlist()
-        pass
     flags = SectorFlags.POSITIONING if pax else 0
     if not id_: flags = flags | SectorFlags.GROUND_DUTY
     return Sector(flightnum, from_, to,
                   sched_off_dt, sched_on_dt, off_dt, on_dt,
-                  reg, flags, crewlist)
+                  reg, flags, id_)
 
 
 
-def duty(aims_duty: AimsDuty, start_date: DT.date, trip_id: str) -> Duty:
+def _duty(aims_duty: AimsDuty, trip_id: TripID) -> Duty:
     """Create a Duty object from an AimsDuty object.
 
     :param aims_duty: An AimsDuty object to convert
@@ -189,6 +184,10 @@ def duty(aims_duty: AimsDuty, start_date: DT.date, trip_id: str) -> Duty:
 
     :return: A Duty object.
     """
+    start_date = (
+        DT.datetime(1980, 1, 1) +
+        DT.timedelta(int(trip_id.aims_day))
+    ).date()
     try:
         trip_day = int(aims_duty[0][7]) - 1
         date = start_date + DT.timedelta(days=trip_day)
@@ -208,5 +207,17 @@ def duty(aims_duty: AimsDuty, start_date: DT.date, trip_id: str) -> Duty:
         duty_end += DT.timedelta(days=1)
     sectors = [] # type: List[Sector]
     for aims_sector in aims_duty:
-        sectors.append(sector(aims_sector, date))
+        sectors.append(_sector(aims_sector, date))
     return Duty(duty_start, duty_end, trip_id, sectors)
+
+
+def duties(aims_duties: List[AimsDuty], trip_id: TripID) -> List[Duty]:
+    """Process a list of AimsDuty objects into a list of Duty objects.
+
+    :param aims_duties: A list of AimsDuty objects, as output by parse
+    :param trip_id: The TripID object associated with this trip
+    """
+    duty_list: List[Duty] = []
+    for aims_duty in aims_duties:
+        duty_list.append(_duty(aims_duty, trip_id))
+    return duty_list
