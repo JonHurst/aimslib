@@ -1,9 +1,9 @@
-import requests
 from bs4 import BeautifulSoup #type: ignore
 from typing import List, NamedTuple
+import datetime as DT
 
 from aimslib.access.connect import PostFunc
-from aimslib.common.types import BadBriefRoster
+from aimslib.common.types import Duty, TripID, BadBriefRoster
 
 
 class RosterEntry(NamedTuple):
@@ -81,3 +81,38 @@ def parse(html: str) -> List[RosterEntry]:
             table.parent["id"].replace("myday_", ""),
             [X for X in table.stripped_strings]))
     return roster_entries
+
+
+def duties(entries: List[RosterEntry]) -> List[Duty]:
+    """Convert a list of RosterEntry objects into a list of Duty objects.
+
+    :param entries: a list of RosterEntry objects
+
+    :return: A list of Duty objects. There may be multiple Duty objects
+        associated with each RosterEntry. Duty objects for trips only have
+        the trip identifier, since that is all that is available from the
+        brief roster page.
+    """
+    duty_list: List[Duty] = []
+    for entry in entries:
+        while len(entry.items):
+            p = entry.items.pop()
+            if p in ("==>", "D/O", "D/OR", "WD/O", "P/T", "LVE", "FTGD",
+                     "REST", "SICK", "SIDO", "SILN"): continue
+            elif len(p) >= 4 and p[-3] == ":": #found a time
+                end_time = DT.datetime.strptime(p, "%H:%M").time()
+                p = entry.items.pop()
+                start_time = DT.datetime.strptime(p, "%H:%M").time()
+                text = entry.items.pop()
+                date = (DT.datetime(1980, 1, 1) +
+                        DT.timedelta(int(entry.aims_day))).date()
+                start, end = [DT.datetime.combine(date, X)
+                              for X in (start_time, end_time)]
+                if end < start:
+                    end += DT.timedelta(days=1)
+                duty_list.append(
+                    Duty(start, end, TripID(entry.aims_day, text), None))
+            else: #should be a trip identifier
+                duty_list.append(
+                    Duty(None, None, TripID(entry.aims_day, p), None))
+    return duty_list

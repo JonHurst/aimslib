@@ -26,11 +26,16 @@ class Sector(T.NamedTuple):
     crew: T.List[CrewMember]
 
 
+class TripID(T.NamedTuple):
+    aims_day: str
+    trip: str
+
+
 class Duty(T.NamedTuple):
-    start: DT.datetime
-    finish: DT.datetime
-    trip_id: str
-    sectors: T.List[Sector]
+    start: T.Optional[DT.datetime]
+    finish: T.Optional[DT.datetime]
+    trip_id: TripID
+    sectors: T.Optional[T.List[Sector]]
 
 
 class AIMSException(Exception):

@@ -6,6 +6,7 @@ import re
 
 from aimslib.access.connect import PostFunc
 from aimslib.common.types import (
+    TripID,
     BadTripDetails,
     NoTripDetails,
     BadAIMSSector,
@@ -14,11 +15,6 @@ from aimslib.common.types import Sector, SectorFlags, CrewMember, Duty
 
 AimsSector = List[str]
 AimsDuty = List[AimsSector]
-
-class TripID(NamedTuple):
-    aims_day: str
-    trip: str
-
 
 def retrieve(post: PostFunc, trip_id: TripID) -> str:
     """Downloads and returns the html of a trip sheet.
