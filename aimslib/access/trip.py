@@ -163,8 +163,8 @@ def _sector(aims_sector: AimsSector, date: DT.date
                 on_dt += DT.timedelta(days=1)
     except:
         raise BadAIMSSector(str(date) + ", " + str(aims_sector))
-    flags = SectorFlags.POSITIONING if pax else 0
-    if not id_: flags = flags | SectorFlags.GROUND_DUTY
+    flags = SectorFlags.POSITIONING if pax else SectorFlags.NONE
+    if not id_: flags |= SectorFlags.GROUND_DUTY
     return Sector(flightnum, from_, to,
                   sched_off_dt, sched_on_dt, off_dt, on_dt,
                   reg, flags, id_)

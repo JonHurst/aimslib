@@ -8,7 +8,8 @@ class CrewMember(T.NamedTuple):
     role: str
 
 
-class SectorFlags(enum.Enum):
+class SectorFlags(enum.Flag):
+    NONE = 0
     POSITIONING = enum.auto()
     GROUND_DUTY = enum.auto()
 
