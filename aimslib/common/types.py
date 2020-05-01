@@ -20,8 +20,8 @@ class Sector(T.NamedTuple):
     to: T.Optional[str]
     sched_start: DT.datetime
     sched_finish: DT.datetime
-    act_start: DT.datetime
-    act_finish: DT.datetime
+    act_start: T.Optional[DT.datetime]
+    act_finish: T.Optional[DT.datetime]
     reg: T.Optional[str]
     flags: SectorFlags
     crewlist_id: str
