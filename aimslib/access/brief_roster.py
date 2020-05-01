@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup #type: ignore
 from typing import List, NamedTuple
 
-from aimslib.access.connect import REQUEST_TIMEOUT
+from aimslib.access.connect import PostFunc
 from aimslib.common.types import BadBriefRoster
 
 
@@ -11,15 +11,10 @@ class RosterEntry(NamedTuple):
     items: List[str]
 
 
-def get_brief_roster(
-        session: requests.Session,
-        base_url: str,
-        offset: int = 0
-) -> str:
+def retrieve(post: PostFunc, offset: int = 0) -> str:
     """Downloads the html of a brief roster.
 
-    :param session: Session object returned from connect
-    :param base_url: The base url returned from connect
+    :param post: Function to call for sending requests to AIMS
     :offset: The offset from the 'current' brief roster
 
     :return: html string containing the requested brief roster
@@ -31,20 +26,15 @@ def get_brief_roster(
     downloaded. This makes the process of stepping to a distant roster
     very slow.
     """
-    r = session.post(
-        base_url + "perinfo.exe/schedule",
-        timeout=REQUEST_TIMEOUT)
+    r = post("perinfo.exe/schedule", {})
     if offset:
         direc = "2" if offset > 0 else "1"
         for _ in range(abs(offset)):
-            r = session.post(
-                base_url + "perinfo.exe/schedule",
-                {"Direc": direc},
-                timeout=REQUEST_TIMEOUT)
+            r = post("perinfo.exe/schedule", {"Direc": direc,  "_flagy": "2"})
     return r.text
 
 
-def parse_brief_roster(html: str) -> List[RosterEntry]:
+def parse(html: str) -> List[RosterEntry]:
     """Convert an HTML brief roster to a list of roster entries.
 
     :param html: The HTML of an AIMS Brief Roster

@@ -57,9 +57,10 @@ def _login(
     def post(rel_url: str, data: T.Dict[str, str]) -> requests.Response:
         url = base_url + rel_url
         if "useGET" in data.keys():
-            r = session.get(url, timeout=REQUEST_TIMEOUT)
+            del data["useGET"]
+            r = session.get(url, params=data, timeout=REQUEST_TIMEOUT)
         else:
-            r = session.post(base_url + rel_url, data, timeout=REQUEST_TIMEOUT)
+            r = session.post(url, data=data, timeout=REQUEST_TIMEOUT)
         if heartbeat: heartbeat()
         return r
     retval: PostFunc = post

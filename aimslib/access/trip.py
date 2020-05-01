@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup #type: ignore
-from typing import List
+from typing import List, Tuple, NamedTuple
 import datetime as DT
 import re
 
-from aimslib.access.connect import REQUEST_TIMEOUT
+from aimslib.access.connect import PostFunc
 from aimslib.common.types import (
     BadTripDetails,
     NoTripDetails,
@@ -15,34 +15,34 @@ from aimslib.common.types import Sector, SectorFlags, CrewMember, Duty
 AimsSector = List[str]
 AimsDuty = List[AimsSector]
 
+class TripID(NamedTuple):
+    aims_day: str
+    trip: str
 
-def get_trip(
-        session: requests.Session,
-        base_url: str,
-        aims_day: str,
-        trip: str
-) -> str:
+
+def retrieve(post: PostFunc, trip_id: TripID) -> str:
     """Downloads and returns the html of a trip sheet.
 
-    :param aims_day: The number of days since 1/1/1980 as a string.
-    :param trip: The identifier that AIMS uses to define a trip. Usually a
-        letter or two followed by three or four numbers.
+    :param post: The closure returned from connect.connect()
+    :param trip_id: A tuple of the form (aims_day, trip) that uniquely
+        identifies the trip. trip is usually a letter or two followed by
+        three or four numbers, aims_day is the number of days since 1/1/1980
+        in the form of a string.
 
     :return: The html of an AIMS trip sheet. This is the sheet you get
         if you click a trip identifier on "Crew Schedule - Brief"
         (e.g. B089) then click the "Trip Details in UTC button".
     """
-    r = session.get(base_url + "perinfo.exe/schedule",
-                    params={
-                        "FltInf": "1",
-                        "ORGDAY": aims_day,
-                        "CROUTE": trip,
-                    },
-                    timeout=REQUEST_TIMEOUT)
+    r = post("perinfo.exe/schedule", {
+                 "useGET": "1",
+                 "FltInf": "1",
+                 "ORGDAY": trip_id.aims_day,
+                 "CROUTE": trip_id.trip,
+             })
     return r.text
 
 
-def parse_trip_details(html:str) -> List[AimsDuty]:
+def parse(html:str) -> List[AimsDuty]:
     """Parse trip details out of a AIMS trip sheet.
 
     :param html: The HTML of an AIMS trip sheet
