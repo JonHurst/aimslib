@@ -24,7 +24,7 @@ class Cache:
             pass #empty cache will be used
 
 
-    def __del__(self):
+    def store(self):
         with open(self.pickle_file, "wb") as f:
             pickle.dump(self.cache, f)
 
