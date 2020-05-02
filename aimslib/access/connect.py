@@ -29,8 +29,8 @@ def _check_response(r: requests.Response, *args, **kwargs) -> None:
 def _login(
         session: requests.Session,
         server_url:str,
-        username:str,
-        password:str,
+        enc_username:str,
+        enc_password:str,
         heartbeat: HeartbeatFunc,
         recurse: bool = True
 ) -> PostFunc:
@@ -47,10 +47,8 @@ def _login(
 
     :raises: requests exceptions.
     """
-    encoded_id = base64.b64encode(username.encode()).decode()
-    encoded_pw = hashlib.md5(password.encode()).hexdigest()
     r = session.post(server_url,
-                     {"Crew_Id": encoded_id, "Crm": encoded_pw},
+                     {"Crew_Id": enc_username, "Crm": enc_password},
                      timeout=REQUEST_TIMEOUT)
     if heartbeat: heartbeat()
     base_url = r.url.split("wtouch.exe")[0]
@@ -68,10 +66,9 @@ def _login(
     if r.text.find("Please log out and try again.") != -1:
         if not recurse: raise AT.LogonError
         logout(post)
-        retval = _login(session, server_url, username, password, heartbeat, False)
+        retval = _login(session, server_url, enc_username, enc_password, heartbeat, False)
     if r.text.find("Please re-enter your Credentials and try again") != -1:
         raise AT.UsernamePasswordError
-    del password #for ease of auditing
     return retval
 
 
@@ -102,7 +99,11 @@ def connect(server_url: str, username:str, pw:str, hb: HeartbeatFunc = None
         "User-Agent":
         "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) "
         "Gecko/20100101 Firefox/64.0"})
-    return _login(session, server_url, username, pw, hb)
+    encoded_id = base64.b64encode(username.encode()).decode()
+    encoded_pw = hashlib.md5(pw.encode()).hexdigest()
+    post_func = _login(session, server_url, encoded_id, encoded_pw, hb)
+    del pw #for ease of auditing
+    return post_func
 
 
 def logout(post: PostFunc) -> None:
