@@ -37,7 +37,6 @@ class TripCache(Cache):
 
 
     def trip(self, trip_id: TripID) -> List[Duty]:
-        print("Looking for ", trip_id, "in cache")
         if trip_id not in self.cache or self.needs_refresh_p(trip_id):
             self.cache[trip_id] = (
                 Trip.duties(
@@ -51,7 +50,6 @@ class TripCache(Cache):
         duty_list = self.cache[trip_id]
         day_later = DT.datetime.utcnow() + DT.timedelta(days=1)
         if duty_list[0].start > day_later:
-            print(trip_id, " more than one day in the future, using cached version")
             return False #cached version is more than one day in the future
         for duty in duty_list:
             if not all_actuals_recorded: break
@@ -60,7 +58,6 @@ class TripCache(Cache):
                     all_actuals_recorded = False
                     break
         if all_actuals_recorded:
-            print(trip_id, "all actuals recorded, using cached version")
             return False #cached version finalised
         return True
 
