@@ -1,7 +1,9 @@
 # aimslib #
 
 This is a refactor from various different projects to move the functionality of
-extracting information from AIMS into a common library.
+extracting information from AIMS servers into a common library. It is built and
+tested against easyJet AIMS servers. It will likely need adapting to work with
+AIMS servers run by other airlines.
 
 ## Example code ###
 ```python
