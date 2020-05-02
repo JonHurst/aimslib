@@ -110,6 +110,21 @@ class TestBriefRosterParsing(unittest.TestCase):
         data = "Not even HTML"
         with self.assertRaises(BadBriefRoster) as cm:
             parse(data)
+        #no id on parent of duties_table
+        data = ("<html><head></head><body><div id='main_div'>"
+                "<div><table class=\"duties_table\">"
+                "<tr><td>B001T</td><td></td></tr>"
+                "<tr><td>&nbsp;6</td><td></td></tr>"
+                "</table></div></div></body></html>")
+        with self.assertRaises(BadBriefRoster) as cm:
+            parse(data)
+        #duties_table has no parent
+        data = ("<table class=\"duties_table\">"
+                "<tr><td>QQQQ</td><td></td></tr>"
+                "<tr><td>&nbsp;6</td><td></td></tr>"
+                "</table>")
+        with self.assertRaises(BadBriefRoster) as cm:
+            parse(data)
 
 
 
@@ -128,7 +143,6 @@ class TestBriefRosterProcessing(unittest.TestCase):
                                      'DOOR', '9:30', '10:45',
                                      '89']),
             ])
-        print(duties_)
         self.assertEqual(duties_, [
             Duty(start=None, finish=None,
                  trip_id=TripID('14146', 'B006D'),

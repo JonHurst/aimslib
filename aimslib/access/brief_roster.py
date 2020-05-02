@@ -77,9 +77,12 @@ def parse(html: str) -> List[RosterEntry]:
     if not duties_tables: raise BadBriefRoster
     roster_entries: List[RosterEntry] = []
     for table in duties_tables:
-        roster_entries.append(RosterEntry(
-            table.parent["id"].replace("myday_", ""),
-            [X for X in table.stripped_strings]))
+        if "id" not in table.parent.attrs:
+            raise BadBriefRoster
+        roster_entries.append(
+            RosterEntry(
+                table.parent["id"].replace("myday_", ""),
+                list(table.stripped_strings)))
     return roster_entries
 
 
