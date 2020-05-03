@@ -80,22 +80,22 @@ class TestBriefRosterParsing(unittest.TestCase):
         entries = parse(data)
         self.assertEqual(entries, [
             RosterEntry(aims_day='14146',
-                        items=['CSBE', '3:00', '5:00', 'B006D']),
-            RosterEntry(aims_day='14147', items=['B086']),
-            RosterEntry(aims_day='14150', items=['D/O']),
-            RosterEntry(aims_day='14153', items=['LVE']),
-            RosterEntry(aims_day='14157', items=['==>', 'B253']),
-            RosterEntry(aims_day='14162', items=['ADTY', '5:00', '11:00']),
-            RosterEntry(aims_day='14174', items=['FTGD']),
+                        items=('CSBE', '3:00', '5:00', 'B006D')),
+            RosterEntry(aims_day='14147', items=('B086',)),
+            RosterEntry(aims_day='14150', items=('D/O',)),
+            RosterEntry(aims_day='14153', items=('LVE',)),
+            RosterEntry(aims_day='14157', items=('==>', 'B253')),
+            RosterEntry(aims_day='14162', items=('ADTY', '5:00', '11:00')),
+            RosterEntry(aims_day='14174', items=('FTGD',)),
             RosterEntry(aims_day='13869',
-                        items = ['FIRE', '8:00', '9:30',
+                        items = ('FIRE', '8:00', '9:30',
                                  'DOOR', '9:30', '10:45',
                                  'G/S', '10:45', '11:30',
                                  'ASEC', '11:30', '13:00',
                                  'CRM', '13:00', '14:00',
                                  'SEP', '14:00', '16:00',
-                                 '89']),
-            RosterEntry(aims_day='14036', items=['B001T', '6']),
+                                 '89')),
+            RosterEntry(aims_day='14036', items=('B001T', '6')),
             ])
 
 
@@ -133,15 +133,15 @@ class TestBriefRosterProcessing(unittest.TestCase):
     def test_roster_processing(self):
         duties_ = duties(
             [
-                RosterEntry(aims_day='14146', items=['CSBE', '3:00', '5:00', 'B006D']),
-                RosterEntry(aims_day='14147', items=['B086']),
-                RosterEntry(aims_day='14152', items=['D/O']),
-                RosterEntry(aims_day='14153', items=['LVE']),
-                RosterEntry(aims_day='14157', items=['==>', 'B253']),
+                RosterEntry(aims_day='14146', items=('CSBE', '3:00', '5:00', 'B006D')),
+                RosterEntry(aims_day='14147', items=('B086',)),
+                RosterEntry(aims_day='14152', items=('D/O',)),
+                RosterEntry(aims_day='14153', items=('LVE',)),
+                RosterEntry(aims_day='14157', items=('==>', 'B253')),
                 RosterEntry(aims_day='14158',
-                            items = ['FIRE', '8:00', '9:30',
+                            items = ('FIRE', '8:00', '9:30',
                                      'DOOR', '9:30', '10:45',
-                                     '89']),
+                                     '89')),
             ])
         self.assertEqual(duties_, [
             Duty(start=None, finish=None,
