@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup #type: ignore
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Tuple
 import datetime as DT
 
 from aimslib.access.connect import PostFunc
@@ -8,7 +8,7 @@ from aimslib.common.types import Duty, TripID, BadBriefRoster
 
 class RosterEntry(NamedTuple):
     aims_day: str
-    items: List[str]
+    items: Tuple[str, ...]
 
 
 def retrieve(post: PostFunc, count: int = 1, backwards: bool = False) -> str:
@@ -86,7 +86,7 @@ def parse(html: str) -> List[RosterEntry]:
         roster_entries.append(
             RosterEntry(
                 table.parent["id"].replace("myday_", ""),
-                list(table.stripped_strings)))
+                tuple(table.stripped_strings)))
     return roster_entries
 
 
@@ -102,15 +102,16 @@ def duties(entries: List[RosterEntry]) -> List[Duty]:
     """
     duty_list: List[Duty] = []
     for entry in entries:
-        while len(entry.items):
-            p = entry.items.pop()
+        items = list(entry.items)
+        while len(items):
+            p = items.pop()
             if p in ("==>", "D/O", "D/OR", "WD/O", "P/T", "LVE", "FTGD",
                      "REST", "SICK", "SIDO", "SILN"): continue
             elif len(p) >= 4 and p[-3] == ":": #found a time
                 end_time = DT.datetime.strptime(p, "%H:%M").time()
-                p = entry.items.pop()
+                p = items.pop()
                 start_time = DT.datetime.strptime(p, "%H:%M").time()
-                text = entry.items.pop()
+                text = items.pop()
                 date = (DT.datetime(1980, 1, 1) +
                         DT.timedelta(int(entry.aims_day))).date()
                 start, end = [DT.datetime.combine(date, X)
