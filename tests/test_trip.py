@@ -100,6 +100,9 @@ class TestTripParsing(unittest.TestCase):
                  'PAX', '18:05']
             ]])
 
+#note: a bug appears to have been introduced into AIMS where multi-day trips
+# have "1" as the trip day for all days. The above test is still valid
+# though.
 
     def test_bad_trip_details(self):
         with self.assertRaises(BadTripDetails) as cm:
@@ -162,3 +165,56 @@ class TestSectorProcessing(unittest.TestCase):
                    'G-EZDL',
                    SectorFlags.NONE,
                    '14293,353365012537,14295,8496,opo,1, ,lgw,319'))
+
+
+    def test_air_positioning_future(self):
+        data = ['14293,353365012537,14295,8496,opo,1, ,lgw,319',
+                '8496', 'OPO', 'LGW', '1235', '1450', 'Wed20Feb', '3',
+                'PAX', 'G-EZDL', '11:35']
+        result = Trip._sector(data, dt.date(2000, 1, 1))
+        self.assertEqual(
+            result,
+            Sector('8496', 'OPO', 'LGW',
+                   dt.datetime(2000, 1, 1, 12, 35),
+                   dt.datetime(2000, 1, 1, 14, 50),
+                   None, None,
+                   'G-EZDL',
+                   SectorFlags.POSITIONING,
+                   '14293,353365012537,14295,8496,opo,1, ,lgw,319'))
+
+
+    def test_air_positioning_past(self):
+        data = ['14293,353365012537,14295,8496,opo,1, ,lgw,319',
+                '8496', 'OPO', 'LGW', '1235', '1450', 'Wed20Feb', '3',
+                'PAX', 'A1230', 'A1445', 'G-EZDL', '11:35']
+        result = Trip._sector(data, dt.date(2000, 1, 1))
+        self.assertEqual(
+            result,
+            Sector('8496', 'OPO', 'LGW',
+                   dt.datetime(2000, 1, 1, 12, 35),
+                   dt.datetime(2000, 1, 1, 14, 50),
+                   dt.datetime(2000, 1, 1, 12, 30),
+                   dt.datetime(2000, 1, 1, 14, 45),
+                   'G-EZDL',
+                   SectorFlags.POSITIONING,
+                   '14293,353365012537,14295,8496,opo,1, ,lgw,319'))
+
+
+    def test_ground_positioning(self):
+        pass #need an example of this
+
+
+    def test_quasi_sector(self):
+        data = [None,
+                'LSBY', 'BRS', 'BRS', '0600', '0910', 'Fri18Jan', '1',
+                '09:10', '09:10', '06:00']
+        result = Trip._sector(data, dt.date(2000, 1, 1))
+        self.assertEqual(
+            result,
+            Sector('LSBY', 'BRS', 'BRS',
+                   dt.datetime(2000, 1, 1, 6, 0),
+                   dt.datetime(2000, 1, 1, 9, 10),
+                   None, None,
+                   None,
+                   SectorFlags.QUASI| SectorFlags.GROUND_DUTY,
+                   None))
