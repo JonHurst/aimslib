@@ -119,8 +119,8 @@ def duties(entries: List[RosterEntry]) -> List[Duty]:
                 if end < start:
                     end += DT.timedelta(days=1)
                 duty_list.append(
-                    Duty(start, end, TripID(entry.aims_day, text), None))
+                    Duty(TripID(entry.aims_day, text), start, end, None))
             else: #should be a trip identifier
                 duty_list.append(
-                    Duty(None, None, TripID(entry.aims_day, p), None))
+                    Duty(TripID(entry.aims_day, p), None, None, None))
     return duty_list

@@ -204,7 +204,7 @@ def _duty(aims_duty: AimsDuty, trip_id: TripID) -> Duty:
     sectors = [] # type: List[Sector]
     for aims_sector in aims_duty:
         sectors.append(_sector(aims_sector, date))
-    return Duty(duty_start, duty_end, trip_id, sectors)
+    return Duty(trip_id, duty_start, duty_end, sectors)
 
 
 def duties(aims_duties: List[AimsDuty], trip_id: TripID) -> List[Duty]:

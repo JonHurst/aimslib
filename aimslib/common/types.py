@@ -33,9 +33,9 @@ class TripID(T.NamedTuple):
 
 
 class Duty(T.NamedTuple):
+    trip_id: TripID
     start: T.Optional[DT.datetime]
     finish: T.Optional[DT.datetime]
-    trip_id: TripID
     sectors: T.Optional[T.List[Sector]]
 
 
