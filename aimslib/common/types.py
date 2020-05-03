@@ -12,6 +12,8 @@ class SectorFlags(enum.Flag):
     NONE = 0
     POSITIONING = enum.auto()
     GROUND_DUTY = enum.auto()
+    QUASI = enum.auto()
+    # QUASI means a standby or SEP segment recorded in a duty as a sector
 
 
 class Sector(T.NamedTuple):
