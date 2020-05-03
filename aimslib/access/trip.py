@@ -172,7 +172,7 @@ def _sector(aims_sector: AimsSector, date: DT.date
 
 
 
-def _duty(aims_duty: AimsDuty, trip_id: TripID) -> Duty:
+def _duty(aims_duty: AimsDuty, trip_id: TripID, trip_day: int) -> Duty:
     """Create a Duty object from an AimsDuty object.
 
     :param aims_duty: An AimsDuty object to convert
@@ -186,7 +186,9 @@ def _duty(aims_duty: AimsDuty, trip_id: TripID) -> Duty:
         DT.timedelta(int(trip_id.aims_day))
     ).date()
     try:
-        trip_day = int(aims_duty[0][7]) - 1
+        #trip_day = int(aims_duty[0][7]) - 1
+        #bug in AIMS makes every trip_day 1, so assume multiple duties
+        #occur on incremental days
         date = start_date + DT.timedelta(days=trip_day)
         #fix for AIMS bug where end of duty can have non-existent time 24:00
         if aims_duty[-1][-1] == "24:00": aims_duty[-1][-1] = "00:00"
@@ -215,6 +217,6 @@ def duties(aims_duties: List[AimsDuty], trip_id: TripID) -> List[Duty]:
     :param trip_id: The TripID object associated with this trip
     """
     duty_list: List[Duty] = []
-    for aims_duty in aims_duties:
-        duty_list.append(_duty(aims_duty, trip_id))
+    for c, aims_duty in enumerate(aims_duties):
+        duty_list.append(_duty(aims_duty, trip_id, c))
     return duty_list
