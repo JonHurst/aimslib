@@ -11,11 +11,13 @@ class RosterEntry(NamedTuple):
     items: List[str]
 
 
-def retrieve(post: PostFunc, offset: int = 0) -> str:
-    """Downloads the html of a brief roster.
+def retrieve(post: PostFunc, count: int = 1, backwards: bool = False) -> str:
+    """Generator function to retrieve the html of brief rosters.
 
     :param post: Function to call for sending requests to AIMS
-    :offset: The offset from the 'current' brief roster
+    :param count: The maximum number of rosters to access. If <= zero, no limit.
+    :param backwards: If True, generator function will produce previous
+       roster on each call.
 
     :return: html string containing the requested brief roster
 
@@ -26,12 +28,14 @@ def retrieve(post: PostFunc, offset: int = 0) -> str:
     downloaded. This makes the process of stepping to a distant roster
     very slow.
     """
+    count -= 1
     r = post("perinfo.exe/schedule", {})
-    if offset:
-        direc = "2" if offset > 0 else "1"
-        for _ in range(abs(offset)):
-            r = post("perinfo.exe/schedule", {"Direc": direc,  "_flagy": "2"})
-    return r.text
+    yield r.text
+    direc = "1" if backwards else "2"
+    while(count):
+        count -= 1
+        r = post("perinfo.exe/schedule", {"Direc": direc,  "_flagy": "2"})
+        yield r.text
 
 
 def parse(html: str) -> List[RosterEntry]:
