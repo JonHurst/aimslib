@@ -58,6 +58,12 @@ class BadBriefRoster(AIMSException):
     """Brief Roster parse failed."""
     pass
 
+
+class BadRosterEntry(AIMSException):
+    """A RosterEntry object could not be converted."""
+    pass
+
+
 class BadTripDetails(AIMSException):
     """Error parsing trip details."""
     pass

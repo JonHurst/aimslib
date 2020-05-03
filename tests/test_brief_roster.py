@@ -6,6 +6,7 @@ from aimslib.access.brief_roster import (
     RosterEntry,
     parse, duties,
     BadBriefRoster,
+    BadRosterEntry,
 )
 from aimslib.common.types import Duty, TripID
 
@@ -169,3 +170,57 @@ class TestBriefRosterProcessing(unittest.TestCase):
                  trip_id=TripID('14158', 'FIRE'),
                  sectors=None),
         ])
+
+
+    def test_bad_roster_entries(self):
+        #entries not a list or tuple
+        with self.assertRaises(AssertionError) as cm:
+            duties(RosterEntry(aims_day='14147', items=('B086',)))
+        #filter not a list or tuple
+        with self.assertRaises(AssertionError) as cm:
+            duties(
+                [RosterEntry(aims_day='14147', items=('B086',))],
+                "filter")
+        #wrong type in entries list
+        with self.assertRaises(AssertionError) as cm:
+            duties(["bad", "list"])
+        #aims day empty
+        with self.assertRaises(BadRosterEntry) as cm:
+            duties([
+                RosterEntry(
+                    aims_day='',
+                    items=('B086',)
+                )
+            ])
+        #aims day not a number
+        with self.assertRaises(BadRosterEntry) as cm:
+            duties([
+                RosterEntry(
+                    aims_day='text',
+                    items=('B086',)
+                )
+            ])
+        #malformed items -- just one time
+        with self.assertRaises(BadRosterEntry) as cm:
+            duties([
+                RosterEntry(
+                    aims_day='14160',
+                    items=('8:00',)
+                )
+            ])
+        #malformed items -- two times, no identifier
+        with self.assertRaises(BadRosterEntry) as cm:
+            duties([
+                RosterEntry(
+                    aims_day='14160',
+                    items=('8:00', '09:00')
+                )
+            ])
+        #malformed item -- bad times
+        with self.assertRaises(BadRosterEntry) as cm:
+            duties([
+                RosterEntry(
+                    aims_day='14160',
+                    items=('ESBY', '24:00', '25:00')
+                )
+            ])
