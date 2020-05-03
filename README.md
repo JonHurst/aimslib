@@ -14,22 +14,32 @@ from aimslib.access.connect import connect, logout
 from  aimslib.access.cache import TripCache, CrewlistCache
 import aimslib.access.brief_roster as Roster
 
+#put your own values in here
+CACHE_DIR = "/SUITABLE/LOCATION/FOR/CACHE"
+ECREW_LOGIN_PAGE = "https://ECREW/LOGIN/PAGE"
+USERNAME = "YOUR_USERNAME"
+PASSWORD = "YOUR_PASSWORD"
+
+
 def heartbeat():
     sys.stderr.write('.')
     sys.stderr.flush()
 
-#connect to server
-post_func = connect(
-    "https://PATH.TO.LOGIN.PAGE",
-    "USERNAME",
-    "PASSWORD",
-    heartbeat)
+#connect to AIMS
+post_func = connect(ECREW_LOGIN_PAGE, USERNAME, PASSWORD, heartbeat)
 
-#build expanded duty list
-trip_cache = TripCache("/SUITABLE/PATH/FOR/CACHEFILE/aimslib.tripcache", post_func)
-roster = Roster.duties(Roster.parse(Roster.retrieve(post_func, -2)))
+#build a sparse duty list from the current brief roster and the two before
+sparse_dutylist = []
+for roster in Roster.retrieve(post_func, 3, True):
+    sparse_dutylist.extend(Roster.duties(Roster.parse(roster)))
+
+#build an expanded duty list using trip pages
 expanded_dutylist = []
-for duty in roster:
+trip_cache = TripCache(CACHE_DIR + "aimslib.tripcache", post_func)
+last_id = None
+for duty in sorted(sparse_dutylist):
+    if duty.trip_id == last_id: continue #sparse_dutylist may contain duplicates
+    last_id = duty.trip_id
     if duty.start is None:
         expanded_dutylist.extend(trip_cache.trip(duty.trip_id))
     else:
@@ -37,7 +47,7 @@ for duty in roster:
 trip_cache.store()
 
 #build crewlist map
-crew_cache = CrewlistCache("/SUITABLE/PATH/FOR/CACHEFILE/aimslib.clcache", post_func)
+crew_cache = CrewlistCache(CACHE_DIR + "aimslib.clcache", post_func)
 crewlist_map = {}
 for duty in expanded_dutylist:
     if duty.sectors:
@@ -54,5 +64,6 @@ print(json.dumps(
 
 #cleanup
 logout(post_func)
+
 
 ```
