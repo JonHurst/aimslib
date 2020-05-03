@@ -4,7 +4,7 @@ import os
 import datetime as DT
 
 from aimslib.access.connect import PostFunc
-from aimslib.common.types import TripID, Duty, CrewMember
+from aimslib.common.types import TripID, Duty, CrewMember, SectorFlags
 import aimslib.access.trip as Trip
 import aimslib.access.crew as Crew
 
@@ -54,6 +54,8 @@ class TripCache(Cache):
         for duty in duty_list:
             if not all_actuals_recorded: break
             for sector in duty.sectors:
+                #Ground duties _never_ get updated so no point refreshing
+                if sector.flags & SectorFlags.GROUND_DUTY: continue
                 if sector.act_start is None or sector.act_finish is None:
                     all_actuals_recorded = False
                     break
