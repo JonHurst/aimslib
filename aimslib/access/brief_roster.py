@@ -17,27 +17,30 @@ class RosterEntry(NamedTuple):
     items: Tuple[str, ...]
 
 
-def retrieve(post: PostFunc, count: int = 1, backwards: bool = False) -> str:
+def retrieve(post: PostFunc, count: int = 0) -> str:
     """Generator function to retrieve the html of brief rosters.
 
     :param post: Function to call for sending requests to AIMS
-    :param count: The maximum number of rosters to access. If <= zero, no limit.
-    :param backwards: If True, generator function will produce previous
-       roster on each call.
 
-    :return: html string containing the requested brief roster
+    :param count: The number of rosters to access. 0 means just access the
+        current roster. A positive number means access that number of _extra_
+        rosters in a forward direction, i.e. 2 will access a total of three
+        rosters, the current one plus the next two. A negative number means go
+        backwards, i.e. -2 will access the current roster plus the previous two.
 
-    Unfortunately, as far as I can tell the "brief roster"
-    functionality of AIMS can only move from one roster to either the
-    next or previous roster. This means if the absolute value of the
-    offset is greater than 1, all intermediary rosters have to be
-    downloaded. This makes the process of stepping to a distant roster
-    very slow.
+    :yields: html string containing the requested brief roster
+
+    Unfortunately, as far as I can tell, "brief roster" functionality of AIMS
+    only allows sequential access -- there is no way to quickly jump to a
+    particular roster. This means accessing a roster a significant distance away
+    in the past or the future is very slow.
     """
-    count -= 1
+    direc = "2" #forwards
+    if count < 0:
+        count = -count
+        direc = "1" #backwards
     r = post("perinfo.exe/schedule", {})
     yield r.text
-    direc = "1" if backwards else "2"
     while(count):
         count -= 1
         r = post("perinfo.exe/schedule", {"Direc": direc,  "_flagy": "2"})
