@@ -377,6 +377,8 @@ def duties(s: str) -> List[T.Duty]:
                 if from_[0] == "*":
                     from_ = from_[1:]
                     flags = T.SectorFlags.POSITIONING
+                if sector[0] == "TAXI":
+                    flags |= T.SectorFlags.GROUND_DUTY
                 sectors.append(T.Sector(
                     name=sector[0],
                     from_=from_, to=sector[3],
