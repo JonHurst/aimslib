@@ -20,7 +20,7 @@
 import re
 import datetime
 from html.parser import HTMLParser
-from typing import List
+from typing import List, Dict
 
 import aimslib.common.types as T
 
@@ -325,13 +325,8 @@ def duty_list(duties):
     return retval
 
 
-def extract_crew(roster):
+def crew(roster: str) -> Dict[str, List[T.CrewMember]]:
     """Extract the crew lists from the text of an AIMS detailed roster.
-
-    Return as a dictionary, keyed on date:flight# or date:All (encoded as strings). The values are
-    of the form:
-
-    ((role1, name1), (role2, name2), ..., roleN, nameN)
     """
     retval = {}
     crew_string = ""
@@ -351,7 +346,9 @@ def extract_crew(roster):
         entries = [re.split(r"\s*(\w{2})> ", X) for X in s[2::2]]
         for (d, e) in zip(dates, entries):
             for flight in e[0].split(","):
-                retval[d + ":" + flight] = tuple(zip(e[1::2], e[2::2]))
+                key = f"{d[6:10]}{d[3:5]}{d[0:2]}{flight}~"
+                crew = zip(e[2::2], e[1::2])
+                retval[key] = tuple([T.CrewMember(X[0], X[1]) for X in crew])
     return retval
 
 
