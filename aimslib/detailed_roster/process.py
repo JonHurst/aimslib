@@ -325,6 +325,10 @@ def duty_list(duties):
     return retval
 
 
+def _clean_name(name: str) -> str:
+    return " ".join([X.strip().capitalize() for X in name.split()])
+
+
 def crew(roster: str) -> Dict[str, List[T.CrewMember]]:
     """Extract the crew lists from the text of an AIMS detailed roster.
     """
@@ -348,7 +352,8 @@ def crew(roster: str) -> Dict[str, List[T.CrewMember]]:
             for flight in e[0].split(","):
                 key = f"{d[6:10]}{d[3:5]}{d[0:2]}{flight}~"
                 crew = zip(e[2::2], e[1::2])
-                retval[key] = tuple([T.CrewMember(X[0], X[1]) for X in crew])
+                retval[key] = tuple(
+                    [T.CrewMember(_clean_name(X[0]), X[1]) for X in crew])
     return retval
 
 
