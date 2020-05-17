@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup #type: ignore
-from typing import List, NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple, Generator
 import datetime as DT
 
 from aimslib.access.connect import PostFunc
@@ -8,8 +8,8 @@ from aimslib.common.types import (
     BadBriefRoster, BadRosterEntry)
 
 
-DEFAULT_FILTER = ("==>", "D/O", "D/OR", "WD/O", "P/T", "LVE", "FTGD",
-                  "REST", "SICK", "SIDO", "SILN")
+DEFAULT_FILTER = ["==>", "D/O", "D/OR", "WD/O", "P/T", "LVE", "FTGD",
+                  "REST", "SICK", "SIDO", "SILN"]
 
 
 class RosterEntry(NamedTuple):
@@ -17,7 +17,7 @@ class RosterEntry(NamedTuple):
     items: Tuple[str, ...]
 
 
-def retrieve(post: PostFunc, count: int = 0) -> str:
+def retrieve(post: PostFunc, count: int = 0) -> Generator[str, None, None]:
     """Generator function to retrieve the html of brief rosters.
 
     :param post: Function to call for sending requests to AIMS
