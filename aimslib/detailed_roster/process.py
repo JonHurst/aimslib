@@ -291,9 +291,9 @@ def duty_list(duties):
         faketime = datetime.datetime.combine(duties[-1][-2].date() + datetime.timedelta(days=1), datetime.time.min)
         duties[-1] += [Event(faketime.date(), "???"), faketime, faketime]
     #create a retval entry from each duty
-    for c, d in enumerate(duties):
+    for d in duties:
         aims_day = str((d[0].date - datetime.date(1980, 1, 1)).days)
-        retval_entry = [T.TripID(aims_day, str(c))]
+        retval_entry = [T.TripID(aims_day, d[0].text)]
         #if there is only one item in the duty, it must be an all day duty
         if len(d) == 1:
             retval_entry += [[None, None], [d[0].text]]
