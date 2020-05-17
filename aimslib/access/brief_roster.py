@@ -4,7 +4,7 @@ import datetime as DT
 
 from aimslib.access.connect import PostFunc
 from aimslib.common.types import (
-    Duty, TripID,
+    Duty, TripID, Sector, SectorFlags,
     BadBriefRoster, BadRosterEntry)
 
 
@@ -136,8 +136,13 @@ def duties(entries: List[RosterEntry], filter_: List[str]=DEFAULT_FILTER
                               for X in (start_time, end_time)]
                 if end < start:
                     end += DT.timedelta(days=1)
+                quasi_sector = Sector(
+                    text, None, None, start, end, start, end, None,
+                    SectorFlags.GROUND_DUTY | SectorFlags.QUASI, None)
                 duty_list.append(
-                    Duty(TripID(entry.aims_day, text), start, end, None))
+                    Duty(
+                        TripID(entry.aims_day, text),
+                        start, end, [quasi_sector]))
             else: #should be a trip identifier
                 duty_list.append(
                     Duty(TripID(entry.aims_day, p), None, None, None))

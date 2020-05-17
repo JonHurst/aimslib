@@ -26,7 +26,7 @@ class Sector(T.NamedTuple):
     act_finish: T.Optional[DT.datetime]
     reg: T.Optional[str]
     flags: SectorFlags
-    crewlist_id: str
+    crewlist_id: T.Optional[str]
 
 
 class TripID(T.NamedTuple):

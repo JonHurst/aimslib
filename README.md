@@ -56,6 +56,7 @@ crewlist_map = {}
 for duty in expanded_dutylist:
     if duty.sectors:
         for sector in duty.sectors:
+            if not sector.crewlist_id: continue
             crewlist = crew_cache.crewlist(sector.crewlist_id)
             crewlist_map[sector.crewlist_id] = crewlist
 crew_cache.store()
