@@ -20,7 +20,7 @@
 import re
 import datetime
 from html.parser import HTMLParser
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import aimslib.common.types as T
 
@@ -329,9 +329,20 @@ def _clean_name(name: str) -> str:
     return " ".join([X.strip().capitalize() for X in name.split()])
 
 
-def crew(roster: str) -> Dict[str, List[T.CrewMember]]:
+def crew(roster: str, duties: List[T.Duty]=[]
+) -> Dict[str, Tuple[T.CrewMember, ...]]:
     """Extract the crew lists from the text of an AIMS detailed roster.
     """
+    #create a mapping of the form {allkey: [crewlist_id1, ...], } to allow
+    #crew with flights listed as all to be assigned to sector ids.
+    sector_map: Dict[str, List[str]] = {}
+    for duty in duties:
+        if not duty.sectors: continue
+        key_all = f"{duty.start:%Y%m%d}All~"
+        sector_map[key_all] = []
+        for sector in duty.sectors:
+            if not sector.crewlist_id: continue
+            sector_map[key_all].append(sector.crewlist_id)
     retval = {}
     crew_string = ""
     ls = lines(roster)
@@ -354,6 +365,10 @@ def crew(roster: str) -> Dict[str, List[T.CrewMember]]:
                 crew = zip(e[2::2], e[1::2])
                 retval[key] = tuple(
                     [T.CrewMember(_clean_name(X[0]), X[1]) for X in crew])
+                #add keys for individual sectors where flight is listed as all
+                if key in sector_map:
+                    for id_ in sector_map[key]:
+                        retval[id_] = retval[key]
     return retval
 
 
