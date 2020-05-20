@@ -8,7 +8,7 @@ from aimslib.access.brief_roster import (
     BadBriefRoster,
     BadRosterEntry,
 )
-from aimslib.common.types import Duty, TripID
+from aimslib.common.types import Duty, TripID, Sector, SectorFlags
 
 
 class TestBriefRosterParsing(unittest.TestCase):
@@ -151,7 +151,16 @@ class TestBriefRosterProcessing(unittest.TestCase):
             Duty(start=datetime.datetime(2018, 9, 24, 3, 0),
                  finish=datetime.datetime(2018, 9, 24, 5, 0),
                  trip_id=TripID('14146', 'CSBE'),
-                 sectors=None),
+                 sectors=[Sector(
+                     name='CSBE',
+                     from_=None, to=None,
+                     sched_start=datetime.datetime(2018, 9, 24, 3, 0),
+                     sched_finish=datetime.datetime(2018, 9, 24, 5, 0),
+                     act_start=datetime.datetime(2018, 9, 24, 3, 0),
+                     act_finish=datetime.datetime(2018, 9, 24, 5, 0),
+                     reg=None,
+                     flags=SectorFlags.QUASI| SectorFlags.GROUND_DUTY,
+                     crewlist_id=None)]),
             Duty(start=None, finish=None,
                  trip_id=TripID('14147', 'B086'),
                  sectors=None),
@@ -164,11 +173,26 @@ class TestBriefRosterProcessing(unittest.TestCase):
             Duty(start=datetime.datetime(2018, 10, 6, 9, 30),
                  finish=datetime.datetime(2018, 10, 6, 10, 45),
                  trip_id=TripID('14158', 'DOOR'),
-                 sectors=None),
+                 sectors=[Sector(name='DOOR',
+                                 from_=None, to=None,
+                                 sched_start=datetime.datetime(2018, 10, 6, 9, 30),
+                                 sched_finish=datetime.datetime(2018, 10, 6, 10, 45),
+                                 act_start=datetime.datetime(2018, 10, 6, 9, 30),
+                                 act_finish=datetime.datetime(2018, 10, 6, 10, 45),
+                                 reg=None,
+                                 flags=SectorFlags.QUASI | SectorFlags.GROUND_DUTY,
+                                 crewlist_id=None)]),
             Duty(start=datetime.datetime(2018, 10, 6, 8, 0),
                  finish=datetime.datetime(2018, 10, 6, 9, 30),
                  trip_id=TripID('14158', 'FIRE'),
-                 sectors=None),
+                 sectors=[Sector(name='FIRE', from_=None, to=None,
+                                 sched_start=datetime.datetime(2018, 10, 6, 8, 0),
+                                 sched_finish=datetime.datetime(2018, 10, 6, 9, 30),
+                                 act_start=datetime.datetime(2018, 10, 6, 8, 0),
+                                 act_finish=datetime.datetime(2018, 10, 6, 9, 30),
+                                 reg=None,
+                                 flags=SectorFlags.QUASI | SectorFlags.GROUND_DUTY,
+                                 crewlist_id=None)]),
         ])
 
 
