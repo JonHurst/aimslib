@@ -32,6 +32,30 @@ class Flight(NamedTuple):
     on: dt.datetime
 
 
+def retrieve(
+        post: PostFunc,
+        d: dt.date,
+        type_: str="",
+        airport: str=""
+) -> str:
+    assert type_ in ("A", "D", "")
+    dstr = dt.date.strftime(d, "%d/%m/%Y")
+    deps = 0
+    if type:
+        deps = "1" if type_ == "D" else "2"
+    r = post(
+        "fltinfo.exe/AjAction", {
+            "AjaxOperation": "2",
+            "cal1": dstr,
+            "Airport": airport,
+            "ACRegistration": "",
+            "Deps": deps,
+            "Flight": "",
+            "times_format": "2",
+            })
+    return r.text
+
+
 def _to_dt(s:str, d: dt.date) -> dt.datetime:
     return dt.datetime.combine(
         d, dt.datetime.strptime(s, "%H:%M").time())
@@ -67,27 +91,3 @@ def parse(html:str, d: dt.date
         except ValueError as err:
             print(str(err), file=sys.stderr)
     return info
-
-
-def retrieve(
-        post: PostFunc,
-        d: dt.date,
-        type_: str="",
-        airport: str=""
-) -> str:
-    assert type_ in ("A", "D", "")
-    dstr = dt.date.strftime(d, "%d/%m/%Y")
-    deps = 0
-    if type:
-        deps = "1" if type_ == "D" else "2"
-    r = post(
-        "fltinfo.exe/AjAction", {
-            "AjaxOperation": "2",
-            "cal1": dstr,
-            "Airport": airport,
-            "ACRegistration": "",
-            "Deps": deps,
-            "Flight": "",
-            "times_format": "2",
-            })
-    return r.text
