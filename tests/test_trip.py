@@ -129,7 +129,7 @@ class TestSectorProcessing(unittest.TestCase):
                    dt.datetime(2000, 1, 1, 12, 35),
                    dt.datetime(2000, 1, 1, 14, 50),
                    None, None,
-                   'G-EZDL',
+                   'G-EZDL', None,
                    SectorFlags.NONE,
                    '14293,353365012537,14295,8496,opo,1, ,lgw,319'))
 
@@ -146,7 +146,7 @@ class TestSectorProcessing(unittest.TestCase):
                    dt.datetime(2000, 1, 2, 0, 30),
                    dt.datetime(2000, 1, 1, 23, 0),
                    dt.datetime(2000, 1, 2, 0, 35),
-                   'G-EZDL',
+                   'G-EZDL', None,
                    SectorFlags.NONE,
                    '14293,353365012537,14295,8496,opo,1, ,lgw,319'))
 
@@ -162,7 +162,7 @@ class TestSectorProcessing(unittest.TestCase):
                    dt.datetime(2000, 1, 1, 23, 0),
                    dt.datetime(2000, 1, 2, 0, 30),
                    None, None,
-                   'G-EZDL',
+                   'G-EZDL', None,
                    SectorFlags.NONE,
                    '14293,353365012537,14295,8496,opo,1, ,lgw,319'))
 
@@ -178,7 +178,7 @@ class TestSectorProcessing(unittest.TestCase):
                    dt.datetime(2000, 1, 1, 12, 35),
                    dt.datetime(2000, 1, 1, 14, 50),
                    None, None,
-                   'G-EZDL',
+                   'G-EZDL', None,
                    SectorFlags.POSITIONING,
                    '14293,353365012537,14295,8496,opo,1, ,lgw,319'))
 
@@ -195,7 +195,7 @@ class TestSectorProcessing(unittest.TestCase):
                    dt.datetime(2000, 1, 1, 14, 50),
                    dt.datetime(2000, 1, 1, 12, 30),
                    dt.datetime(2000, 1, 1, 14, 45),
-                   'G-EZDL',
+                   'G-EZDL', None,
                    SectorFlags.POSITIONING,
                    '14293,353365012537,14295,8496,opo,1, ,lgw,319'))
 
@@ -215,6 +215,6 @@ class TestSectorProcessing(unittest.TestCase):
                    dt.datetime(2000, 1, 1, 6, 0),
                    dt.datetime(2000, 1, 1, 9, 10),
                    None, None,
-                   None,
+                   None, None,
                    SectorFlags.QUASI| SectorFlags.GROUND_DUTY,
                    None))

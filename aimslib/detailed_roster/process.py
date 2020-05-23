@@ -389,7 +389,7 @@ def duties(s: str) -> List[T.Duty]:
                     from_=None, to=None,
                     sched_start=sector[1], sched_finish=sector[2],
                     act_start=sector[1], act_finish=sector[2],
-                    reg=None, crewlist_id=None,
+                    reg=None, type_=None, crewlist_id=None,
                     flags=T.SectorFlags.QUASI | T.SectorFlags.GROUND_DUTY))
             else:
                 from_ = sector[2]
@@ -404,7 +404,8 @@ def duties(s: str) -> List[T.Duty]:
                     from_=from_, to=sector[3],
                     sched_start=sector[1], sched_finish=sector[4],
                     act_start=sector[1], act_finish=sector[4],
-                    reg=None, crewlist_id=f"{sector[1]:%Y%m%d}{sector[0]}~",
+                    reg=None, type_=None,
+                    crewlist_id=f"{sector[1]:%Y%m%d}{sector[0]}~",
                     flags=flags))
         ret.append(T.Duty(duty[0], duty[1][0], duty[1][1], sectors))
     return ret

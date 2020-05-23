@@ -137,7 +137,7 @@ def duties(entries: List[RosterEntry], filter_: List[str]=DEFAULT_FILTER
                 if end < start:
                     end += DT.timedelta(days=1)
                 quasi_sector = Sector(
-                    text, None, None, start, end, start, end, None,
+                    text, None, None, start, end, start, end, None, None,
                     SectorFlags.GROUND_DUTY | SectorFlags.QUASI, None)
                 duty_list.append(
                     Duty(

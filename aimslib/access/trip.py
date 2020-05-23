@@ -168,7 +168,7 @@ def _sector(aims_sector: AimsSector, date: DT.date
     if not reg: flags |= SectorFlags.GROUND_DUTY
     return Sector(flightnum, from_, to,
                   sched_off_dt, sched_on_dt, off_dt, on_dt,
-                  reg, flags, id_)
+                  reg, None, flags, id_)
 
 
 
