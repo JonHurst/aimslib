@@ -41,7 +41,7 @@ def retrieve(
     assert type_ in ("A", "D", "")
     dstr = dt.date.strftime(d, "%d/%m/%Y")
     deps = 0
-    if type:
+    if type_:
         deps = "1" if type_ == "D" else "2"
     r = post(
         "fltinfo.exe/AjAction", {
