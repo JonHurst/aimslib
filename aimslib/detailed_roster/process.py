@@ -177,6 +177,7 @@ class Event:
     def __repr__(self):
         return f"Event({self.date.__repr__()}, '{self.text}')"
 
+
 def event_stream(date, columns):
     """Concatenates columns into a stream of datetime, Event and Break objects
 
@@ -281,62 +282,55 @@ def duty_stream(eventstream):
     return duties
 
 
-def duty_list(duties):
-    """Converts a 'Duty stream' into a 'Duty list'
+def duty_list(duty_streams):
+    """Converts a 'Duty stream' into a list of aimslib Duty objects'
 
-    The input is a duty stream as detailed in the duty_stream function's docstring. Final fixups are
-    made and data in the following 'Duty list' format is returned:
+    :param duty_streams: List of duty streams, as ouput by duty_streams
 
-    [
-    [TripID, [DutyStart, DutyEnd], [/duty/],...],
-    ...
-    ]
-
-    where [/duty/] can be:
-
-    1. A Sector of form [Flight#, OffBlocks, From, To, OnBlocks]
-    2. A Standbylike of form [Type, Start, End]
-    3. An all day duty of the form [Type]. In this case DutyStart and DutyEnd are set to None
+    :returns: A tuple of aimslib Duty objects
     """
-    retval = []
-    #the end of the last duty may not be included on the roster if it finishes after midnight. For
-    #consistency, fake the end of this duty if necessary
-    if (len(duties[-1]) >= 2 and
-        isinstance(duties[-1][-1], Event) and
-        isinstance(duties[-1][-2], datetime.datetime)):
-        faketime = datetime.datetime.combine(duties[-1][-2].date() + datetime.timedelta(days=1), datetime.time.min)
-        duties[-1] += [Event(faketime.date(), "???"), faketime, faketime]
+    #the end of the last duty may not be included on the roster if it finishes
+    #after midnight. For consistency, fake the end of this duty if necessary
+    if (len(duty_streams[-1]) >= 2 and
+        isinstance(duty_streams[-1][-1], Event) and
+        isinstance(duty_streams[-1][-2], datetime.datetime)):
+        faketime = datetime.datetime.combine(
+            duty_streams[-1][-2].date() + datetime.timedelta(days=1),
+            datetime.time.min)
+        duty_streams[-1] += [Event(faketime.date(), "???"), faketime, faketime]
     #create a retval entry from each duty
-    for d in duties:
-        aims_day = str((d[0].date - datetime.date(1980, 1, 1)).days)
-        retval_entry = [T.TripID(aims_day, d[0].text)]
+    duties = []
+    for stream in duty_streams:
+        tripid = (
+            str((stream[0].date - datetime.date(1980, 1, 1)).days),
+            stream[0].text)
         #if there is only one item in the duty, it must be an all day duty
-        if len(d) == 1:
-            retval_entry += [[None, None], [d[0].text]]
-            continue
-        #split into sectors at line breaks
-        sector, sectors = [], []
-        for entry in d:
-            if isinstance(entry, Break):
-                if sector:
-                    sectors.append(sector)
-                    sector = []
-            else:
-                sector.append(entry)
-        sectors.append(sector)
-        #duty times can be extracted from first and last sectors
-        retval_entry += __duty_times(sectors)
-        #fix up sectors to be [name, datetime, datetime] or [name, datetime, from, to, datetime]
-        for c, s in enumerate(sectors):
-            if len(s) == 3 or len(s) == 4:
-                sectors[c] = __fix_quasi_sector(s)
-            elif len(s) >= 5 and len(s) <= 7:
-                sectors[c] = __fix_sector(s)
-            else:
-                raise SectorFormatException
-        #add sectors to retval entry
-        retval.append(retval_entry + sectors)
-    return retval
+        if len(stream) == 1:
+            duty = T.Duty(tripid, None, None, None)
+        else:
+            #split stream at line breaks
+            sector_streams = [[]]
+            for entry in stream:
+                if isinstance(entry, Break):
+                    if not sector_streams[-1]: continue
+                    sector_streams.append([])
+                else:
+                    sector_streams[-1].append(entry)
+            #duty times can be extracted from first and last sectors
+            duty_start, duty_finish = __duty_times(sector_streams)
+            #fix up sectors to be [name, datetime, datetime] or [name, datetime, from, to, datetime]
+            sectors = []
+            for sector_stream in sector_streams:
+                if len(sector_stream) == 3 or len(sector_stream) == 4:
+                    sectors.append(__quasi_sector(sector_stream))
+                elif len(sector_stream) >= 5 and len(sector_stream) <= 7:
+                    sectors.append(__sector(sector_stream))
+                else:
+                    raise SectorFormatException
+            #add sectors to retval entry
+            duty = T.Duty(tripid, duty_start, duty_finish, tuple(sectors))
+        duties.append(duty)
+    return tuple(duties)
 
 
 def __duty_times(sectors):
@@ -344,11 +338,13 @@ def __duty_times(sectors):
     if not (isinstance(sectors[0][1], datetime.datetime) and
             isinstance(sectors[-1][-1], datetime.datetime)):
             raise SectorFormatException
-    return [[sectors[0][1], sectors[-1][-1]]]
+    return (sectors[0][1], sectors[-1][-1])
 
 
-def __fix_sector(s):
+def __sector(s):
     assert len(s) >= 5 and len(s) <= 7
+    if not isinstance(s[0], Event):
+        raise SectorFormatException
     #find 'from' Event object
     for f, e in enumerate(s[1:-2]):
         if isinstance(e, Event): break
@@ -360,24 +356,40 @@ def __fix_sector(s):
         not isinstance(s[f], datetime.datetime) or
         not isinstance(s[f + 3], datetime.datetime)):
         raise SectorFormatException
-    return [s[0].text, s[f], s[f + 1].text, s[f + 2].text, s[f + 3]]
+    flags = T.SectorFlags.NONE
+    if s[f + 1].text[0] == "*":
+        s[f + 1].text = s[f + 1].text[1:]
+        flags |= T.SectorFlags.POSITIONING
+    if s[0].text == "TAXI":
+        flags |= T.SectorFlags.GROUND_DUTY
+    return T.Sector(
+        s[0].text, s[f + 1].text, s[f + 2].text,
+        s[f],  s[f + 3], s[f], s[f + 3],
+        None, None, flags,
+        f"{s[0].date:%Y%m%d}{s[0].text}~")
 
 
-def __fix_quasi_sector(s):
+def __quasi_sector(s):
+    assert len(s) == 3 or len(s) == 4
     if not isinstance(s[0], Event):
         raise SectorFormatException
     if len(s) == 3:
         if not (isinstance(s[1], datetime.datetime) and
                 isinstance(s[2], datetime.datetime)):
             raise SectorFormatException
-        return [s[0].text, s[1], s[2]]
-    elif len(s) == 4:
+        name = s[0].text
+        start, finish = s[1], s[2]
+    else:
         if not (isinstance(s[2], datetime.datetime) and
                 isinstance(s[3], datetime.datetime)):
             raise SectorFormatException
-        return [s[0].text, s[2], s[3]]
-    else:
-        raise SectorFormatException
+        name = s[0].text
+        start, finish = s[2], s[3]
+    return T.Sector(
+        name, None, None, start, finish, start, finish,
+        None, None,
+        T.SectorFlags.QUASI | T.SectorFlags.GROUND_DUTY,
+        None)
 
 
 def _clean_name(name: str) -> str:
@@ -429,38 +441,4 @@ def crew(roster: str, duties: List[T.Duty]=[]
 
 def duties(s: str) -> List[T.Duty]:
     l = lines(s)
-    c = columns(l)
-    es = event_stream(extract_date(l), c)
-    ds = duty_stream(es)
-    dl = duty_list(ds)
-    ret: List[T.Duty] = []
-    for duty in dl:
-        if duty[1][1] is None: continue
-        sectors: List[T.Sector] = []
-        for sector in duty[2:]:
-            if len(sector) == 3:
-                sectors.append(T.Sector(
-                    name=sector[0],
-                    from_=None, to=None,
-                    sched_start=sector[1], sched_finish=sector[2],
-                    act_start=sector[1], act_finish=sector[2],
-                    reg=None, type_=None, crewlist_id=None,
-                    flags=T.SectorFlags.QUASI | T.SectorFlags.GROUND_DUTY))
-            else:
-                from_ = sector[2]
-                flags = T.SectorFlags.NONE
-                if from_[0] == "*":
-                    from_ = from_[1:]
-                    flags = T.SectorFlags.POSITIONING
-                if sector[0] == "TAXI":
-                    flags |= T.SectorFlags.GROUND_DUTY
-                sectors.append(T.Sector(
-                    name=sector[0],
-                    from_=from_, to=sector[3],
-                    sched_start=sector[1], sched_finish=sector[4],
-                    act_start=sector[1], act_finish=sector[4],
-                    reg=None, type_=None,
-                    crewlist_id=f"{sector[1]:%Y%m%d}{sector[0]}~",
-                    flags=flags))
-        ret.append(T.Duty(duty[0], duty[1][0], duty[1][1], sectors))
-    return ret
+    return duty_list(duty_stream(event_stream(extract_date(l), columns(l))))
