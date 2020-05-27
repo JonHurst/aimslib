@@ -318,42 +318,59 @@ def duty_list(duties):
                 sector.append(entry)
         sectors.append(sector)
         #duty times can be extracted from first and last sectors
-        if not (isinstance(sectors[0][1], datetime.datetime) and
-                isinstance(sectors[-1][-1], datetime.datetime)):
-                raise SectorFormatException
-        retval_entry += [[sectors[0][1], sectors[-1][-1]]]
+        retval_entry += __duty_times(sectors)
         #fix up sectors to be [name, datetime, datetime] or [name, datetime, from, to, datetime]
         for c, s in enumerate(sectors):
-            if not isinstance(s[0], Event):
-                raise SectorFormatException
-            sectors[c][0] = s[0].text
-            if len(s) == 3:
-                if not (isinstance(s[1], datetime.datetime) and
-                        isinstance(s[2], datetime.datetime)):
-                    raise SectorFormatException
-            elif len(s) == 4:
-                if not (isinstance(s[2], datetime.datetime) and
-                        isinstance(s[3], datetime.datetime)):
-                    raise SectorFormatException
-                del sectors[c][1]
-            elif len(s) < 5 or len(s) > 7:
-                raise SectorFormatException
+            if len(s) == 3 or len(s) == 4:
+                sectors[c] = __fix_quasi_sector(s)
+            elif len(s) >= 5 and len(s) <= 7:
+                sectors[c] = __fix_sector(s)
             else:
-                #find 'from' Event object
-                for f, e in enumerate(s[1:-2]):
-                    if isinstance(e, Event): break
-                else: #no Event objects found in expected range
-                    raise SectorFormatException
-                #'from' is at s[f + 1], thus s[f + 2] should be 'to', s[f] should be
-                # off blocks and s[f + 3] should be on blocks
-                if (not isinstance(s[f + 2], Event) or
-                    not isinstance(s[f], datetime.datetime) or
-                    not isinstance(s[f + 3], datetime.datetime)):
-                    raise SectorFormatException
-                sectors[c] = [sectors[c][0], s[f], s[f + 1].text, s[f + 2].text, s[f + 3]]
+                raise SectorFormatException
         #add sectors to retval entry
         retval.append(retval_entry + sectors)
     return retval
+
+
+def __duty_times(sectors):
+    #duty times can be extracted from first and last sectors
+    if not (isinstance(sectors[0][1], datetime.datetime) and
+            isinstance(sectors[-1][-1], datetime.datetime)):
+            raise SectorFormatException
+    return [[sectors[0][1], sectors[-1][-1]]]
+
+
+def __fix_sector(s):
+    assert len(s) >= 5 and len(s) <= 7
+    #find 'from' Event object
+    for f, e in enumerate(s[1:-2]):
+        if isinstance(e, Event): break
+    else: #no Event objects found in expected range
+        raise SectorFormatException
+    #'from' is at s[f + 1], thus s[f + 2] should be 'to', s[f] should be
+    # off blocks and s[f + 3] should be on blocks
+    if (not isinstance(s[f + 2], Event) or
+        not isinstance(s[f], datetime.datetime) or
+        not isinstance(s[f + 3], datetime.datetime)):
+        raise SectorFormatException
+    return [s[0].text, s[f], s[f + 1].text, s[f + 2].text, s[f + 3]]
+
+
+def __fix_quasi_sector(s):
+    if not isinstance(s[0], Event):
+        raise SectorFormatException
+    if len(s) == 3:
+        if not (isinstance(s[1], datetime.datetime) and
+                isinstance(s[2], datetime.datetime)):
+            raise SectorFormatException
+        return [s[0].text, s[1], s[2]]
+    elif len(s) == 4:
+        if not (isinstance(s[2], datetime.datetime) and
+                isinstance(s[3], datetime.datetime)):
+            raise SectorFormatException
+        return [s[0].text, s[2], s[3]]
+    else:
+        raise SectorFormatException
 
 
 def _clean_name(name: str) -> str:
