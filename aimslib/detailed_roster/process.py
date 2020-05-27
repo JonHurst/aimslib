@@ -153,6 +153,10 @@ class Break:
         return ("Line break", "Column break", "Duty break")[self.type]
 
 
+    def __repr__(self):
+        return f"Break({self.type})"
+
+
 class Event:
     """A string plus a date stamp.
 
@@ -166,9 +170,12 @@ class Event:
         self.text = text
 
 
-    def __repr__(self):
+    def __str__(self):
         return str(self.date) + ": " + self.text
 
+
+    def __repr__(self):
+        return f"Event({self.date.__repr__()}, '{self.text}')"
 
 def event_stream(date, columns):
     """Concatenates columns into a stream of datetime, Event and Break objects
