@@ -7,6 +7,9 @@ class CrewMember(T.NamedTuple):
     name: str
     role: str
 
+    def __repr__(self):
+        return f"CrewMember({self.name}, {self.role})"
+
 
 class SectorFlags(enum.Flag):
     NONE = 0
@@ -29,10 +32,21 @@ class Sector(T.NamedTuple):
     flags: SectorFlags
     crewlist_id: T.Optional[str]
 
+    def __repr__(self):
+        return (f"Sector('{self.name}', "
+                f"'{self.from_}', '{self.to}', "
+                f"{repr(self.sched_start)}, {repr(self.sched_finish)}, "
+                f"{repr(self.act_start)}, {repr(self.act_finish)}, "
+                f"'{self.reg}', '{self.type_}', {repr(self.flags)}, "
+                f"'{self.crewlist_id}')").replace("'None'", "None")
+
 
 class TripID(T.NamedTuple):
     aims_day: str
     trip: str
+
+    def __repr__(self):
+        return f"TripID('{self.aims_day}', '{self.trip}')"
 
 
 class Duty(T.NamedTuple):
@@ -40,6 +54,11 @@ class Duty(T.NamedTuple):
     start: T.Optional[DT.datetime]
     finish: T.Optional[DT.datetime]
     sectors: T.Optional[T.List[Sector]]
+
+    def __repr__(self):
+        return (f"Duty({self.trip_id}, "
+                f"{repr(self.start)}, {repr(self.finish)}, "
+                f"{self.sectors})")
 
 
 class AIMSException(Exception):
