@@ -304,29 +304,30 @@ def duty_list(duty_streams):
         tripid = (
             str((stream[0].date - datetime.date(1980, 1, 1)).days),
             stream[0].text)
-        #if there is only one item in the duty, it must be an all day duty
-        if len(stream) == 1:
-            duty = T.Duty(tripid, None, None, None)
-        else:
-            #split stream at line breaks
-            sector_streams = [[]]
-            for entry in stream:
-                if isinstance(entry, Break):
-                    if not sector_streams[-1]: continue
-                    sector_streams.append([])
-                else:
-                    sector_streams[-1].append(entry)
-            #duty times can be extracted from first and last sectors
-            duty_start, duty_finish = __duty_times(sector_streams)
-            #fix up sectors to be [name, datetime, datetime] or [name, datetime, from, to, datetime]
-            sectors = []
-            for sector_stream in sector_streams:
-                if len(sector_stream) == 3 or len(sector_stream) == 4:
-                    sectors.append(__quasi_sector(sector_stream))
-                elif len(sector_stream) >= 5 and len(sector_stream) <= 7:
-                    sectors.append(__sector(sector_stream))
-                else:
-                    raise SectorFormatException
+        #if there is only one item in the duty, it's some sort of day off
+        if len(stream) == 1: continue
+        #split stream at line breaks
+        sector_streams = [[]]
+        for entry in stream:
+            if isinstance(entry, Break):
+                if not sector_streams[-1]: continue
+                sector_streams.append([])
+            else:
+                sector_streams[-1].append(entry)
+        #duty times can now be extracted
+        duty_start, duty_finish = __duty_times(sector_streams)
+        #build sector list
+        sectors = []
+        for sector_stream in sector_streams:
+            if not sector_stream or not isinstance(sector_stream[0], Event):
+                raise SectorFormatException
+            #determine whether 'normal' sector by presence of Event object
+            for f, e in enumerate(sector_stream[1:-2]):
+                if isinstance(e, Event):
+                    sectors.append(__sector(sector_stream, f + 1))
+                    break
+            else: #no Event objects found in expected range
+                sectors.append(__quasi_sector(sector_stream))
             #add sectors to retval entry
             duty = T.Duty(tripid, duty_start, duty_finish, tuple(sectors))
         duties.append(duty)
@@ -341,50 +342,36 @@ def __duty_times(sectors):
     return (sectors[0][1], sectors[-1][-1])
 
 
-def __sector(s):
-    assert len(s) >= 5 and len(s) <= 7
-    if not isinstance(s[0], Event):
-        raise SectorFormatException
-    #find 'from' Event object
-    for f, e in enumerate(s[1:-2]):
-        if isinstance(e, Event): break
-    else: #no Event objects found in expected range
-        raise SectorFormatException
-    #'from' is at s[f + 1], thus s[f + 2] should be 'to', s[f] should be
-    # off blocks and s[f + 3] should be on blocks
-    if (not isinstance(s[f + 2], Event) or
-        not isinstance(s[f], datetime.datetime) or
-        not isinstance(s[f + 3], datetime.datetime)):
+def __sector(s, idx):
+    #'from' is at s[idx], thus s[idx + 1] should be 'to', s[idx - 1] should be
+    #'off blocks' and s[idx + 2] should be 'on blocks'
+    if (idx == 1 or idx + 2 >= len(s) or
+        not isinstance(s[idx + 1], Event) or
+        not isinstance(s[idx - 1], datetime.datetime) or
+        not isinstance(s[idx + 2], datetime.datetime)):
         raise SectorFormatException
     flags = T.SectorFlags.NONE
-    if s[f + 1].text[0] == "*":
-        s[f + 1].text = s[f + 1].text[1:]
+    if s[idx].text[0] == "*":
+        s[idx].text = s[idx].text[1:]
         flags |= T.SectorFlags.POSITIONING
     if s[0].text == "TAXI":
         flags |= T.SectorFlags.GROUND_DUTY
     return T.Sector(
-        s[0].text, s[f + 1].text, s[f + 2].text,
-        s[f],  s[f + 3], s[f], s[f + 3],
+        s[0].text, s[idx].text, s[idx + 1].text,
+        s[idx - 1],  s[idx + 2],
+        s[idx - 1],  s[idx + 2],
         None, None, flags,
         f"{s[0].date:%Y%m%d}{s[0].text}~")
 
 
 def __quasi_sector(s):
-    assert len(s) == 3 or len(s) == 4
-    if not isinstance(s[0], Event):
-        raise SectorFormatException
-    if len(s) == 3:
-        if not (isinstance(s[1], datetime.datetime) and
-                isinstance(s[2], datetime.datetime)):
-            raise SectorFormatException
-        name = s[0].text
-        start, finish = s[1], s[2]
-    else:
-        if not (isinstance(s[2], datetime.datetime) and
-                isinstance(s[3], datetime.datetime)):
-            raise SectorFormatException
-        name = s[0].text
+    assert False not in [isinstance(X, datetime.datetime) for X in s[1:]]
+    name = s[0].text
+    if len(s) < 3: raise SectorFormatException
+    if len(s) == 5:
         start, finish = s[2], s[3]
+    else:
+        start, finish = s[1], s[-1]
     return T.Sector(
         name, None, None, start, finish, start, finish,
         None, None,
@@ -441,4 +428,4 @@ def crew(roster: str, duties: List[T.Duty]=[]
 
 def duties(s: str) -> List[T.Duty]:
     l = lines(s)
-    return duty_list(duty_stream(event_stream(extract_date(l), columns(l))))
+    return  duty_list(duty_stream(event_stream(extract_date(l), columns(l))))
