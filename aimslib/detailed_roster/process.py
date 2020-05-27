@@ -25,9 +25,18 @@ from typing import List, Dict, Tuple
 import aimslib.common.types as T
 
 
-class InputFileException(Exception):
+class DetailedRosterException(Exception):
+
     def __str__(self):
-        return "Input file does not appear to be an AIMS detailed roster"
+        return self.__doc__
+
+
+class InputFileException(DetailedRosterException):
+    "Input file does not appear to be an AIMS detailed roster."
+
+
+class SectorFormatException(DetailedRosterException):
+    "Sector with unexpected format found."
 
 
 class RosterParser(HTMLParser):
@@ -297,31 +306,53 @@ def duty_list(duties):
         #if there is only one item in the duty, it must be an all day duty
         if len(d) == 1:
             retval_entry += [[None, None], [d[0].text]]
-        else:
-            #otherwise split into sectors at line breaks
-            sectors = [[]]
-            for entry in d:
-                if isinstance(entry, Break):
-                    sectors.append([])
-                elif isinstance(entry, Event):
-                    sectors[-1].append(entry.text)
-                else:
-                    sectors[-1].append(entry)
-            #duty times can be extracted from first and last sectors
-            retval_entry += [[sectors[0][1], sectors[-1][-1]]]
-            #We may or may not need to remove the "start duty" entry from anything other than last entry
-            for s in sectors[:-1]:
-                if len([X for X in s if isinstance(X, datetime.datetime)]) >= 3: del s[1]
-            #The last entry may need the finish duty time stripping.
-            if len([X for X in sectors[-1] if isinstance(X, datetime.datetime)]) == 3: del sectors[-1][-1]
-            #Single sector case
-            if (len(sectors) == 1 and
-                len([X for X in sectors[0] if isinstance(X, datetime.datetime)]) == 4):
-                del sectors[0][1]
-                del sectors[0][-1]
-            #add sectors to retval entry
-            retval_entry += sectors
-        retval.append(retval_entry)
+            continue
+        #split into sectors at line breaks
+        sector, sectors = [], []
+        for entry in d:
+            if isinstance(entry, Break):
+                if sector:
+                    sectors.append(sector)
+                    sector = []
+            else:
+                sector.append(entry)
+        sectors.append(sector)
+        #duty times can be extracted from first and last sectors
+        if not (isinstance(sectors[0][1], datetime.datetime) and
+                isinstance(sectors[-1][-1], datetime.datetime)):
+                raise SectorFormatException
+        retval_entry += [[sectors[0][1], sectors[-1][-1]]]
+        #fix up sectors to be [name, datetime, datetime] or [name, datetime, from, to, datetime]
+        for c, s in enumerate(sectors):
+            if not isinstance(s[0], Event):
+                raise SectorFormatException
+            sectors[c][0] = s[0].text
+            if len(s) == 3:
+                if not (isinstance(s[1], datetime.datetime) and
+                        isinstance(s[2], datetime.datetime)):
+                    raise SectorFormatException
+            elif len(s) == 4:
+                if not (isinstance(s[2], datetime.datetime) and
+                        isinstance(s[3], datetime.datetime)):
+                    raise SectorFormatException
+                del sectors[c][1]
+            elif len(s) < 5 or len(s) > 7:
+                raise SectorFormatException
+            else:
+                #find 'from' Event object
+                for f, e in enumerate(s[1:-2]):
+                    if isinstance(e, Event): break
+                else: #no Event objects found in expected range
+                    raise SectorFormatException
+                #'from' is at s[f + 1], thus s[f + 2] should be 'to', s[f] should be
+                # off blocks and s[f + 3] should be on blocks
+                if (not isinstance(s[f + 2], Event) or
+                    not isinstance(s[f], datetime.datetime) or
+                    not isinstance(s[f + 3], datetime.datetime)):
+                    raise SectorFormatException
+                sectors[c] = [sectors[c][0], s[f], s[f + 1].text, s[f + 2].text, s[f + 3]]
+        #add sectors to retval entry
+        retval.append(retval_entry + sectors)
     return retval
 
 
