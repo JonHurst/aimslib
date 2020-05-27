@@ -105,3 +105,94 @@ class Test_duty_list(unittest.TestCase):
                     ]
                 ]
             ])
+
+
+    def test_standby_then_postioning(self):
+        data = [
+            [
+                p.Event(datetime.date(2017, 10, 22), 'LSBY'),
+                datetime.datetime(2017, 10, 22, 10, 0),
+                datetime.datetime(2017, 10, 22, 18, 0),
+                p.Break(0),
+                p.Event(datetime.date(2017, 10, 22), '6140'),
+                datetime.datetime(2017, 10, 22, 18, 10),
+                datetime.datetime(2017, 10, 22, 19, 28),
+                p.Event(datetime.date(2017, 10, 22), '*TLS'),
+                p.Event(datetime.date(2017, 10, 22), 'BRS'),
+                datetime.datetime(2017, 10, 22, 21, 25),
+                datetime.datetime(2017, 10, 22, 21, 40)
+            ]
+        ]
+        expected_result = [
+            [
+                TripID(aims_day='13809', trip='LSBY'),
+                [
+                    datetime.datetime(2017, 10, 22, 10, 0),
+                    datetime.datetime(2017, 10, 22, 21, 40)
+                ],
+                [
+                    'LSBY',
+                    datetime.datetime(2017, 10, 22, 10, 0),
+                    datetime.datetime(2017, 10, 22, 18, 0)
+                ],
+                [
+                    '6140',
+                    datetime.datetime(2017, 10, 22, 19, 28),
+                    '*TLS',
+                    'BRS',
+                    datetime.datetime(2017, 10, 22, 21, 25)
+                ]
+            ]
+        ]
+        self.assertEqual(p.duty_list(data), expected_result)
+
+
+    def test_returntostand_then_earlyendofroster(self):
+        data = [
+            [
+                p.Event(datetime.date(2016, 10, 31), '6073R'),
+                datetime.datetime(2016, 10, 31, 15, 30),
+                datetime.datetime(2016, 10, 31, 16, 30),
+                p.Event(datetime.date(2016, 10, 31), 'BRS'),
+                p.Event(datetime.date(2016, 10, 31), 'BRS'),
+                datetime.datetime(2016, 10, 31, 16, 45),
+                p.Break(0),
+                p.Event(datetime.date(2016, 10, 31), '6073'),
+                datetime.datetime(2016, 10, 31, 18, 43),
+                p.Event(datetime.date(2016, 10, 31), 'BRS'),
+                p.Event(datetime.date(2016, 10, 31), 'ALC'),
+                datetime.datetime(2016, 10, 31, 21, 4),
+                p.Break(0),
+                p.Event(datetime.date(2016, 10, 31), '6074'),
+                datetime.datetime(2016, 10, 31, 21, 39),
+                p.Event(datetime.date(2016, 10, 31), 'ALC')
+            ]
+        ]
+        expected_result = [
+            [
+                TripID(aims_day='13453', trip='6073R'),
+                [
+                    datetime.datetime(2016, 10, 31, 15, 30),
+                    datetime.datetime(2016, 11, 1, 0, 0)
+                ],
+                [
+                    '6073R',
+                    datetime.datetime(2016, 10, 31, 16, 30),
+                    'BRS',
+                    'BRS',
+                    datetime.datetime(2016, 10, 31, 16, 45)],
+                [
+                    '6073',
+                    datetime.datetime(2016, 10, 31, 18, 43),
+                    'BRS',
+                    'ALC',
+                    datetime.datetime(2016, 10, 31, 21, 4)],
+                [
+                    '6074',
+                    datetime.datetime(2016, 10, 31, 21, 39),
+                    'ALC',
+                    '???',
+                    datetime.datetime(2016, 11, 1, 0, 0)]
+            ]
+        ]
+        self.assertEqual(p.duty_list(data), expected_result)
