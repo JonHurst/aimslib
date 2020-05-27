@@ -28,9 +28,9 @@ def csv(duties: List[Duty], crews: Dict[str, List[CrewMember]], fo:bool
             for fn, sfn in fieldname_map:
                 sec_dict[fn] = sec_dict[sfn]
             sec_dict['Role'] = 'p1s' if fo else 'p1'
-            crewlist = crews[sector.crewlist_id]
+            crewlist = crews.get(sector.crewlist_id, [])
             sec_dict['Captain'] = 'Self'
-            if fo and crewlist[0].role == 'CP':
+            if fo and crewlist and crewlist[0].role == 'CP':
                 sec_dict['Captain'] = crewlist[0].name
             crewstr = "; ".join([f"{X[1]}:{X[0]}" for X in crewlist])
             if (not sector.type_ and len(sector.crewlist_id) > 3
