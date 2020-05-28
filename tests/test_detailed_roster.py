@@ -152,7 +152,7 @@ class Test_duty_list(unittest.TestCase):
         self.assertEqual(p.duty_list(data), expected_result)
 
 
-    def test_returntostand_then_earlyendofroster(self):
+    def test_return_to_stand_and_sector_across_end_of_roster(self):
         data = [
             [
                 p.Event(datetime.date(2016, 10, 31), '6073R'),
@@ -201,4 +201,71 @@ class Test_duty_list(unittest.TestCase):
                              None, None,
                              T.SectorFlags.NONE,
                              '201610316074~'))),)
+        self.assertEqual(p.duty_list(data), expected_result)
+
+
+    def test_airport_standby_and_diversion(self):
+        data = [
+            [
+                p.Event(datetime.date(2016, 10, 22), 'ADTY'),
+                datetime.datetime(2016, 10, 22, 5, 0),
+                datetime.datetime(2016, 10, 22, 5, 0),
+                datetime.datetime(2016, 10, 22, 5, 5),
+                p.Break(0),
+                p.Event(datetime.date(2016, 10, 22), '393'),
+                datetime.datetime(2016, 10, 22, 6, 7),
+                p.Event(datetime.date(2016, 10, 22), 'BRS'),
+                p.Event(datetime.date(2016, 10, 22), 'INV'),
+                datetime.datetime(2016, 10, 22, 7, 35),
+                p.Break(0),
+                p.Event(datetime.date(2016, 10, 22), '394'),
+                datetime.datetime(2016, 10, 22, 8, 12),
+                p.Event(datetime.date(2016, 10, 22), 'INV'),
+                p.Event(datetime.date(2016, 10, 22), 'CWL'),
+                datetime.datetime(2016, 10, 22, 9, 26),
+                p.Break(0),
+                p.Event(datetime.date(2016, 10, 22), '394'),
+                datetime.datetime(2016, 10, 22, 10, 50),
+                p.Event(datetime.date(2016, 10, 22), 'CWL'),
+                p.Event(datetime.date(2016, 10, 22), 'BRS'),
+                datetime.datetime(2016, 10, 22, 11, 13),
+                datetime.datetime(2016, 10, 22, 11, 43)]]
+        expected_result = (
+            T.Duty(
+                T.TripID('13444', 'ADTY'),
+                datetime.datetime(2016, 10, 22, 5, 0),
+                datetime.datetime(2016, 10, 22, 11, 43),
+                (
+                    T.Sector(
+                        'ADTY', None, None,
+                        datetime.datetime(2016, 10, 22, 5, 0),
+                        datetime.datetime(2016, 10, 22, 5, 5),
+                        datetime.datetime(2016, 10, 22, 5, 0),
+                        datetime.datetime(2016, 10, 22, 5, 5),
+                        None, None, T.SectorFlags.QUASI | T.SectorFlags.GROUND_DUTY,
+                        None),
+                    T.Sector(
+                        '393', 'BRS', 'INV',
+                        datetime.datetime(2016, 10, 22, 6, 7),
+                        datetime.datetime(2016, 10, 22, 7, 35),
+                        datetime.datetime(2016, 10, 22, 6, 7),
+                        datetime.datetime(2016, 10, 22, 7, 35),
+                        None, None, T.SectorFlags.NONE,
+                        '20161022393~'),
+                    T.Sector(
+                        '394', 'INV', 'CWL',
+                        datetime.datetime(2016, 10, 22, 8, 12),
+                        datetime.datetime(2016, 10, 22, 9, 26),
+                        datetime.datetime(2016, 10, 22, 8, 12),
+                        datetime.datetime(2016, 10, 22, 9, 26),
+                        None, None, T.SectorFlags.NONE,
+                        '20161022394~'),
+                    T.Sector(
+                        '394', 'CWL', 'BRS',
+                        datetime.datetime(2016, 10, 22, 10, 50),
+                        datetime.datetime(2016, 10, 22, 11, 13),
+                        datetime.datetime(2016, 10, 22, 10, 50),
+                        datetime.datetime(2016, 10, 22, 11, 13),
+                        None, None, T.SectorFlags.NONE,
+                        '20161022394~'))),)
         self.assertEqual(p.duty_list(data), expected_result)
