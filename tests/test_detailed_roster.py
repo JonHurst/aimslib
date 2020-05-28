@@ -362,3 +362,64 @@ class Test_duty_list(unittest.TestCase):
                                  T.SectorFlags.GROUND_DUTY | T.SectorFlags.POSITIONING,
                                  '20170528TAXI~'))),)
         self.assertEqual(p.duty_list(data), expected_result)
+
+
+    def test_callout_to_asby_then_callout_to_fly(self):
+        data = [
+            [
+                p.Event(datetime.date(2017, 8, 6), 'LSBY'),
+                datetime.datetime(2017, 8, 6, 12, 40),
+                datetime.datetime(2017, 8, 6, 17, 0),
+                p.Break(0),
+                p.Event(datetime.date(2017, 8, 6), 'ADTY'),
+                datetime.datetime(2017, 8, 6, 17, 0),
+                datetime.datetime(2017, 8, 6, 17, 0),
+                datetime.datetime(2017, 8, 6, 17, 45),
+                p.Break(0),
+                p.Event(datetime.date(2017, 8, 6), '6045'),
+                datetime.datetime(2017, 8, 6, 21, 10),
+                p.Event(datetime.date(2017, 8, 6), 'BRS'),
+                p.Event(datetime.date(2017, 8, 6), 'PMI'),
+                datetime.datetime(2017, 8, 6, 23, 22),
+                p.Break(0),
+                p.Event(datetime.date(2017, 8, 7), '6046'),
+                datetime.datetime(2017, 8, 7, 0, 29),
+                p.Event(datetime.date(2017, 8, 7), 'PMI'),
+                p.Event(datetime.date(2017, 8, 7), 'BRS'),
+                datetime.datetime(2017, 8, 7, 2, 46),
+                datetime.datetime(2017, 8, 7, 3, 16)]]
+        expected_result = (
+                T.Duty(
+                    T.TripID('13732', 'LSBY'),
+                    datetime.datetime(2017, 8, 6, 12, 40),
+                    datetime.datetime(2017, 8, 7, 3, 16),
+                    (
+                        T.Sector('LSBY', None, None,
+                                 datetime.datetime(2017, 8, 6, 12, 40),
+                                 datetime.datetime(2017, 8, 6, 17, 0),
+                                 datetime.datetime(2017, 8, 6, 12, 40),
+                                 datetime.datetime(2017, 8, 6, 17, 0),
+                                 None, None,
+                                 T.SectorFlags.QUASI| T.SectorFlags.GROUND_DUTY,
+                                 None),
+                        T.Sector('ADTY', None, None,
+                                 datetime.datetime(2017, 8, 6, 17, 0),
+                                 datetime.datetime(2017, 8, 6, 17, 45),
+                                 datetime.datetime(2017, 8, 6, 17, 0),
+                                 datetime.datetime(2017, 8, 6, 17, 45),
+                                 None, None,
+                                 T.SectorFlags.QUASI | T.SectorFlags.GROUND_DUTY,
+                                 None),
+                        T.Sector('6045', 'BRS', 'PMI',
+                                 datetime.datetime(2017, 8, 6, 21, 10),
+                                 datetime.datetime(2017, 8, 6, 23, 22),
+                                 datetime.datetime(2017, 8, 6, 21, 10),
+                                 datetime.datetime(2017, 8, 6, 23, 22),
+                                 None, None, T.SectorFlags.NONE, '201708066045~'),
+                        T.Sector('6046', 'PMI', 'BRS',
+                                 datetime.datetime(2017, 8, 7, 0, 29),
+                                 datetime.datetime(2017, 8, 7, 2, 46),
+                                 datetime.datetime(2017, 8, 7, 0, 29),
+                                 datetime.datetime(2017, 8, 7, 2, 46),
+                                 None, None, T.SectorFlags.NONE, '201708076046~'))),)
+        self.assertEqual(p.duty_list(data), expected_result)
