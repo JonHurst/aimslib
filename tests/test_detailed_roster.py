@@ -111,6 +111,46 @@ class Test_duty_list(unittest.TestCase):
         self.assertEqual(p.duty_list(data), expected_result)
 
 
+    def test_standard_standbys(self):
+        data = [
+            [
+                p.Event(datetime.date(2017, 1, 17), 'ESBY'),
+                datetime.datetime(2017, 1, 17, 6, 15),
+                datetime.datetime(2017, 1, 17, 14, 15)],
+            [
+                p.Event(datetime.date(2017, 1, 18), 'ESBY'),
+                datetime.datetime(2017, 1, 18, 5, 15),
+                datetime.datetime(2017, 1, 18, 13, 15)]]
+        expected_result = (
+            T.Duty(
+                T.TripID('13531', 'ESBY'),
+                datetime.datetime(2017, 1, 17, 6, 15),
+                datetime.datetime(2017, 1, 17, 14, 15),
+                (
+                    T.Sector('ESBY', None, None,
+                           datetime.datetime(2017, 1, 17, 6, 15),
+                           datetime.datetime(2017, 1, 17, 14, 15),
+                           datetime.datetime(2017, 1, 17, 6, 15),
+                           datetime.datetime(2017, 1, 17, 14, 15),
+                           None, None,
+                           T.SectorFlags.QUASI | T.SectorFlags.GROUND_DUTY,
+                           None),)),
+            T.Duty(
+                T.TripID('13532', 'ESBY'),
+                datetime.datetime(2017, 1, 18, 5, 15),
+                datetime.datetime(2017, 1, 18, 13, 15),
+                (
+                    T.Sector('ESBY', None, None,
+                             datetime.datetime(2017, 1, 18, 5, 15),
+                             datetime.datetime(2017, 1, 18, 13, 15),
+                             datetime.datetime(2017, 1, 18, 5, 15),
+                             datetime.datetime(2017, 1, 18, 13, 15),
+                             None, None,
+                             T.SectorFlags.QUASI| T.SectorFlags.GROUND_DUTY,
+                             None),)))
+        self.assertEqual(p.duty_list(data), expected_result)
+
+
     def test_standby_then_postioning(self):
         data = [
             [
@@ -204,7 +244,7 @@ class Test_duty_list(unittest.TestCase):
         self.assertEqual(p.duty_list(data), expected_result)
 
 
-    def test_airport_standby_and_diversion(self):
+    def test_airport_standby_callout_and_diversion(self):
         data = [
             [
                 p.Event(datetime.date(2016, 10, 22), 'ADTY'),
@@ -268,4 +308,57 @@ class Test_duty_list(unittest.TestCase):
                         datetime.datetime(2016, 10, 22, 11, 13),
                         None, None, T.SectorFlags.NONE,
                         '20161022394~'))),)
+        self.assertEqual(p.duty_list(data), expected_result)
+
+
+    def test_loe_with_ground_positioning(self):
+        data = [
+            [
+                p.Event(datetime.date(2017, 5, 28), 'TAXI'),
+                datetime.datetime(2017, 5, 28, 13, 15),
+                datetime.datetime(2017, 5, 28, 13, 15),
+                p.Event(datetime.date(2017, 5, 28), '*BRS'),
+                p.Event(datetime.date(2017, 5, 28), 'XWS'),
+                datetime.datetime(2017, 5, 28, 16, 45),
+                p.Break(0),
+                p.Event(datetime.date(2017, 5, 28), 'LOEV'),
+                datetime.datetime(2017, 5, 28, 18, 15),
+                datetime.datetime(2017, 5, 28, 22, 15),
+                p.Break(0),
+                p.Event(datetime.date(2017, 5, 28), 'TAXI'),
+                datetime.datetime(2017, 5, 28, 23, 15),
+                p.Event(datetime.date(2017, 5, 28), '*XWS'),
+                p.Event(datetime.date(2017, 5, 28), 'MAN'),
+                datetime.datetime(2017, 5, 28, 23, 45),
+                datetime.datetime(2017, 5, 28, 23, 45)]]
+        expected_result = (
+                T.Duty(
+                    T.TripID('13662', 'TAXI'),
+                    datetime.datetime(2017, 5, 28, 13, 15),
+                    datetime.datetime(2017, 5, 28, 23, 45),
+                    (
+                        T.Sector('TAXI', 'BRS', 'XWS',
+                                 datetime.datetime(2017, 5, 28, 13, 15),
+                                 datetime.datetime(2017, 5, 28, 16, 45),
+                                 datetime.datetime(2017, 5, 28, 13, 15),
+                                 datetime.datetime(2017, 5, 28, 16, 45),
+                                 None, None,
+                                 T.SectorFlags.GROUND_DUTY | T.SectorFlags.POSITIONING,
+                                 '20170528TAXI~'),
+                        T.Sector('LOEV', None, None,
+                                 datetime.datetime(2017, 5, 28, 18, 15),
+                                 datetime.datetime(2017, 5, 28, 22, 15),
+                                 datetime.datetime(2017, 5, 28, 18, 15),
+                                 datetime.datetime(2017, 5, 28, 22, 15),
+                                 None, None,
+                                 T.SectorFlags.QUASI | T.SectorFlags.GROUND_DUTY,
+                                 None),
+                        T.Sector('TAXI', 'XWS', 'MAN',
+                                 datetime.datetime(2017, 5, 28, 23, 15),
+                                 datetime.datetime(2017, 5, 28, 23, 45),
+                                 datetime.datetime(2017, 5, 28, 23, 15),
+                                 datetime.datetime(2017, 5, 28, 23, 45),
+                                 None, None,
+                                 T.SectorFlags.GROUND_DUTY | T.SectorFlags.POSITIONING,
+                                 '20170528TAXI~'))),)
         self.assertEqual(p.duty_list(data), expected_result)
