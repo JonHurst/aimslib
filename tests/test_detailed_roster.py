@@ -5,6 +5,59 @@ import datetime
 import aimslib.detailed_roster.process as p
 import aimslib.common.types as T
 
+
+class Test_basic_stream(unittest.TestCase):
+
+    def test_standard_overnight(self):
+        data = [
+            [
+                'Oct21\nMon', '6245', '05:30', '06:34', 'BRS', 'FNC', '09:45', '(320)', '',
+                '6246', '10:32', 'FNC', 'BRS', '13:59', '14:29', '(320)', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+            [
+                'Oct22\nTue', '6205', '04:15', '05:12', 'BRS', 'SPU', '07:56', '(320)', '',
+                '6206', '13:16', 'SPU', 'BRS', '15:50', '16:20', '(320)', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'M', ''],
+            [
+                'Oct23\nWed', 'D/O', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']]
+        expected_result = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 21), text='6245'),
+            datetime.datetime(2019, 10, 21, 5, 30),
+            datetime.datetime(2019, 10, 21, 6, 34),
+            p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
+            p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
+            datetime.datetime(2019, 10, 21, 9, 45),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 10, 21), text='6246'),
+            datetime.datetime(2019, 10, 21, 10, 32),
+            p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
+            p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
+            datetime.datetime(2019, 10, 21, 13, 59),
+            datetime.datetime(2019, 10, 21, 14, 29),
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 22), text='6205'),
+            datetime.datetime(2019, 10, 22, 4, 15),
+            datetime.datetime(2019, 10, 22, 5, 12),
+            p.DStr(date=datetime.date(2019, 10, 22), text='BRS'),
+            p.DStr(date=datetime.date(2019, 10, 22), text='SPU'),
+            datetime.datetime(2019, 10, 22, 7, 56),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 10, 22), text='6206'),
+            datetime.datetime(2019, 10, 22, 13, 16),
+            p.DStr(date=datetime.date(2019, 10, 22), text='SPU'),
+            p.DStr(date=datetime.date(2019, 10, 22), text='BRS'),
+            datetime.datetime(2019, 10, 22, 15, 50),
+            datetime.datetime(2019, 10, 22, 16, 20),
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 23), text='D/O'),
+            p.Break.COLUMN]
+        self.assertEqual(
+            p.basic_stream(datetime.date(2019, 10, 21), data),
+            expected_result)
+
+
 class Test_duty(unittest.TestCase):
 
     def test_standard_trip(self):
