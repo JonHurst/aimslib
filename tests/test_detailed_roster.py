@@ -423,3 +423,53 @@ class Test_duty_list(unittest.TestCase):
                                  datetime.datetime(2017, 8, 7, 2, 46),
                                  None, None, T.SectorFlags.NONE, '201708076046~'))),)
         self.assertEqual(p.duty_list(data), expected_result)
+
+
+    def test_lpc(self):
+        data = [
+            [
+                p.Event(datetime.date(2019, 10, 28), 'LIPC'),
+                datetime.datetime(2019, 10, 28, 17, 0),
+                datetime.datetime(2019, 10, 28, 18, 30),
+                datetime.datetime(2019, 10, 28, 22, 30),
+                datetime.datetime(2019, 10, 28, 23, 30)]]
+        expected_result = (
+            T.Duty(
+                T.TripID('14545', 'LIPC'),
+                datetime.datetime(2019, 10, 28, 17, 0)
+                , datetime.datetime(2019, 10, 28, 23, 30),
+                (
+                    T.Sector(
+                        'LIPC', None, None,
+                        datetime.datetime(2019, 10, 28, 18, 30),
+                        datetime.datetime(2019, 10, 28, 22, 30),
+                        datetime.datetime(2019, 10, 28, 18, 30),
+                        datetime.datetime(2019, 10, 28, 22, 30),
+                        None, None,
+                        T.SectorFlags.QUASI | T.SectorFlags.GROUND_DUTY,
+                        None),)),)
+        self.assertEqual(p.duty_list(data), expected_result)
+
+
+    def test_empty_stream(self):
+        self.assertEqual(p.duty_list([]), ())
+
+
+    def test_bad_trip(self):
+        data = [
+            [
+                p.Event(datetime.date(2017, 10, 17), '6195'),
+                datetime.datetime(2017, 10, 17, 4, 30),
+                datetime.datetime(2017, 10, 17, 5, 40),
+                p.Event(datetime.date(2017, 10, 17), 'BRS'),
+                p.Event(datetime.date(2017, 10, 17), 'LPA'),
+                datetime.datetime(2017, 10, 17, 10, 7),
+                "break", #bad break format
+                p.Event(datetime.date(2017, 10, 17), '6196'),
+                datetime.datetime(2017, 10, 17, 11, 7),
+                p.Event(datetime.date(2017, 10, 17), 'LPA'),
+                p.Event(datetime.date(2017, 10, 17), 'BRS'),
+                datetime.datetime(2017, 10, 17, 14, 48),
+                datetime.datetime(2017, 10, 17, 15, 18) ]]
+        with self.assertRaises(AssertionError) as e:
+            print(p.duty_list(data))

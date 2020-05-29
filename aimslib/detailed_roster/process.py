@@ -19,6 +19,7 @@
 
 import re
 import datetime
+import itertools
 from html.parser import HTMLParser
 from typing import List, Dict, Tuple
 
@@ -289,6 +290,8 @@ def duty_list(duty_streams):
 
     :returns: A tuple of aimslib Duty objects
     """
+    assert False in [type(X) in (Event, datetime.datetime, Break)
+                    for X in itertools.chain(duty_streams)]
     #the end of the last duty may not be included on the roster if it finishes
     #after midnight. For consistency, fake the end of this duty if necessary
     if (len(duty_streams[-1]) >= 2 and
