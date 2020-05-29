@@ -155,29 +155,35 @@ def columns(lines: List[Line]) -> List[Column]:
     return columns
 
 
-def event_stream(date: dt.date, columns: List[List[str]]
-) -> EventStream:
-    """Concatenates columns into a stream of datetime, Event and Break objects
+def basic_stream(date: dt.date, columns: List[Column]
+) -> RosterStream:
+    """Concatenates columns into a stream of datetime, DStr and Break objects
 
-    Input is the date of the first column and a 'columns' data structure as described in the
-    columns() function's docstring.
-    Output is a list obtained by concatenating the columns and translating all relevant cells
-    into datetime, Event or Break objects.
+    :date: The date of the first column
+
+    :columns: A list of Column structures. A Column is the list of strings
+        extracted from the roster
+
+    :returns: A list of datetime, DStr or Break objects. The stream returned
+        from this function includes all three types of Break.
     """
-    eventstream: EventStream = [Break.COLUMN]
+    eventstream: RosterStream = [Break.COLUMN]
     for col in columns:
         if col[0] == "": break #column has no header means we're finished
         for entry in col[1:]:
             if entry == "" and not isinstance(eventstream[-1], Break):
                 eventstream.append(Break.LINE)
-            elif (len(entry) <= 2 or #ignore single and double letter codes, e.g. r, M, NM
+            elif (len(entry) <= 2 or #ignore single and double letter codes
                   entry[0] == "(" or #ignore any bracketed code
                   entry == "EZS"): #ignore code indicating an EZS flight
-                pass
+                continue
             elif len(entry) == 5 and entry[2] == ":": #found a time
-                if entry == "24:00":#bug workaround: roster uses non-existent time "24:00"
-                    eventstream.append(dt.datetime.combine(date + dt.timedelta(days=1),
-                                                                dt.time(0,0)))
+                #bug workaround: roster uses non-existent time "24:00"
+                if entry == "24:00":
+                    eventstream.append(
+                        dt.datetime.combine(
+                            date + dt.timedelta(days=1),
+                            dt.time(0, 0)))
                 else:
                     time = dt.time(int(entry[:2]), int(entry[3:]))
                     eventstream.append(dt.datetime.combine(date, time))
@@ -188,10 +194,11 @@ def event_stream(date: dt.date, columns: List[List[str]]
         if isinstance(eventstream[-1], Break): del eventstream[-1]
         #append the column break
         eventstream.append(Break.COLUMN)
-    #there is a corner case where a sector finish time is dragged into the next column
-    #by a duty time finishing after midnight, and another where a sector time uses 24:00
-    #as a start time but advances this to where 00:00 should correctly sit. To counteract
-    #these cases, make sure datetimes in a reversed eventstream only ever decrease.
+    #there is a corner case where a sector finish time is dragged into the next
+    #column by a duty time finishing after midnight, and another where a sector
+    #time uses 24:00 as a start time but advances this to where 00:00 should
+    #correctly sit. To counteract these cases, make sure datetimes in a reversed
+    #eventstream only ever decrease.
     eventstream.reverse()
     for c, event in enumerate(eventstream):
         if isinstance(event, Break) and event == Break.COLUMN:
@@ -404,7 +411,7 @@ def crew(roster: str, duties: List[T.Duty]=[]
 def duties(s: str) -> List[T.Duty]:
     l = lines(s)
     duties = []
-    for stream in duty_stream(event_stream(extract_date(l), columns(l))):
+    for stream in duty_stream(basic_stream(extract_date(l), columns(l))):
         duty = _duty(stream)
         if duty: duties.append(duty)
     return duties
