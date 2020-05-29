@@ -165,7 +165,7 @@ def basic_stream(date: dt.date, columns: List[Column]
         extracted from the roster
 
     :returns: A list of datetime, DStr or Break objects. The stream returned
-        from this function includes all three types of Break.
+        from this function includes COLUMN and LINE breaks, but no DUTY breaks.
     """
     stream: RosterStream = [Break.COLUMN]
     for col in columns:
