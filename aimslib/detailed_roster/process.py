@@ -20,7 +20,7 @@
 import re
 import datetime
 from html.parser import HTMLParser
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union
 
 import aimslib.common.types as T
 
@@ -69,7 +69,7 @@ class RosterParser(HTMLParser):
             self.output_list[-1][-1] += data
 
 
-def lines(roster):
+def lines(roster:str) -> List[List[str]]:
     """
     Turn an AIMS roster into a list of lines, each line being represented by a list of cells.
 
@@ -93,7 +93,7 @@ def lines(roster):
     return parser.output_list
 
 
-def extract_date(lines):
+def extract_date(lines: List[List[str]]) -> datetime.date:
     """
     Return the date as found in the Period: xx/xx/xxxx clause of an AIMS detailed roster
 
@@ -101,10 +101,11 @@ def extract_date(lines):
     The output is a datetime.date object with the first day that the roster is applicable.
     """
     mo = re.search(r"Period: (\d{2}/\d{2}/\d{4})", lines[1][0])
+    if not mo: raise InputFileException
     return datetime.datetime.strptime(mo.group(1), "%d/%m/%Y").date()
 
 
-def columns(lines):
+def columns(lines: List[List[str]]) -> List[List[str]]:
     """
     Convert 'lines' format input to 'columns' format output.
 
@@ -121,7 +122,7 @@ def columns(lines):
     """
     #assumption: main table starts on row 5 of the page 1 table
     width = len(lines[5])
-    columns = [[] for _ in range(width)]
+    columns: List[List[str]] = [[] for _ in range(width)]
     for l in lines[5:]:
         if len(l) != width: continue
         if "Block" in l: break #The last line contains the word "Block"
@@ -178,7 +179,11 @@ class Event:
         return f"Event({self.date.__repr__()}, '{self.text}')"
 
 
-def event_stream(date, columns):
+EventStream = List[Union[Event, Break, datetime.datetime]]
+
+
+def event_stream(date: datetime.date, columns: List[List[str]]
+) -> EventStream:
     """Concatenates columns into a stream of datetime, Event and Break objects
 
     Input is the date of the first column and a 'columns' data structure as described in the
@@ -186,10 +191,10 @@ def event_stream(date, columns):
     Output is a list obtained by concatenating the columns and translating all relevant cells
     into datetime, Event or Break objects.
     """
-    eventstream = [Break(Break.COLUMN)]
-    for c in columns:
-        if c[0] == "": break #column has no header means we're finished
-        for entry in c[1:]:
+    eventstream: EventStream = [Break(Break.COLUMN)]
+    for col in columns:
+        if col[0] == "": break #column has no header means we're finished
+        for entry in col[1:]:
             if entry == "" and not isinstance(eventstream[-1], Break):
                 eventstream.append(Break(Break.LINE))
             elif (len(entry) <= 2 or #ignore single and double letter codes, e.g. r, M, NM
@@ -215,14 +220,14 @@ def event_stream(date, columns):
     #as a start time but advances this to where 00:00 should correctly sit. To counteract
     #these cases, make sure datetimes in a reversed eventstream only ever decrease.
     eventstream.reverse()
-    for c, e in enumerate(eventstream):
-        if isinstance(e, Break) and e.type == Break.COLUMN:
+    for c, event in enumerate(eventstream):
+        if isinstance(event, Break) and event.type == Break.COLUMN:
             last_datetime = datetime.datetime(9999, 1, 1)
-        elif isinstance(e, datetime.datetime):
-            if e > last_datetime:
-                e -= datetime.timedelta(days=1)
-                eventstream[c] = e
-            last_datetime = e
+        elif isinstance(event, datetime.datetime):
+            if event > last_datetime:
+                event -= datetime.timedelta(days=1)
+                eventstream[c] = event
+            last_datetime = event
     eventstream.reverse()
     return eventstream
 
@@ -244,7 +249,8 @@ def duty_stream(eventstream):
     #process column breaks, either to line breaks or by removal
     c = 2
     while c < len(eventstream) - 2:
-        if isinstance(eventstream[c], Break) and eventstream[c].type == Break.COLUMN:
+        event = eventstream[c]
+        if isinstance(event, Break) and event.type == Break.COLUMN:
             #if the column break is preceded by a time but not followed by a time, or
             #if there is a break two entries prior, it is a line break
             if ((isinstance(eventstream[c-1], datetime.datetime) and
@@ -264,7 +270,8 @@ def duty_stream(eventstream):
             #if there is a break two entries prior, both are duty breaks
             eventstream[c] = eventstream[c-2] = Break(Break.DUTY)
         c += 1
-    #change line breaks to duty breaks where the difference between times is greater than 8 hours
+    #change line breaks to duty breaks where the difference between times is
+    #greater than 8 hours
     c = 2
     while c < len(eventstream) - 2:
         if (isinstance(eventstream[c], Break) and
