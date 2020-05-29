@@ -142,6 +142,82 @@ class Test_basic_stream(unittest.TestCase):
             expected_result)
 
 
+    def test_dragover_case(self):
+        data = [
+            [
+                'May27\nSat', '6133', '14:55', '16:01', 'BRS', 'EFL', '19:23', '', '6134', '20:00', 'EFL',
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+            [
+                'May28\nSun', 'BRS', '23:32', '00:02', '', 'TAXI', '13:15', '13:15', '*BRS', 'XWS', '16:45',
+                '', 'LOEV', '18:15', '22:15', '', 'TAXI', '23:15', '*XWS', 'MAN', '23:45', '23:45', '', '', '',
+                '', '', '', '', '', '', '']]
+        expected_result = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2017, 5, 27), text='6133'),
+            datetime.datetime(2017, 5, 27, 14, 55),
+            datetime.datetime(2017, 5, 27, 16, 1),
+            p.DStr(date=datetime.date(2017, 5, 27), text='BRS'),
+            p.DStr(date=datetime.date(2017, 5, 27), text='EFL'),
+            datetime.datetime(2017, 5, 27, 19, 23),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2017, 5, 27), text='6134'),
+            datetime.datetime(2017, 5, 27, 20, 0),
+            p.DStr(date=datetime.date(2017, 5, 27), text='EFL'),
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2017, 5, 28), text='BRS'),
+            datetime.datetime(2017, 5, 27, 23, 32), #Tricksy bit
+            datetime.datetime(2017, 5, 28, 0, 2),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2017, 5, 28), text='TAXI'),
+            datetime.datetime(2017, 5, 28, 13, 15),
+            datetime.datetime(2017, 5, 28, 13, 15),
+            p.DStr(date=datetime.date(2017, 5, 28), text='*BRS'),
+            p.DStr(date=datetime.date(2017, 5, 28), text='XWS'),
+            datetime.datetime(2017, 5, 28, 16, 45),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2017, 5, 28), text='LOEV'),
+            datetime.datetime(2017, 5, 28, 18, 15),
+            datetime.datetime(2017, 5, 28, 22, 15),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2017, 5, 28), text='TAXI'),
+            datetime.datetime(2017, 5, 28, 23, 15),
+            p.DStr(date=datetime.date(2017, 5, 28), text='*XWS'),
+            p.DStr(date=datetime.date(2017, 5, 28), text='MAN'),
+            datetime.datetime(2017, 5, 28, 23, 45),
+            datetime.datetime(2017, 5, 28, 23, 45),
+            p.Break.COLUMN]
+        self.assertEqual(
+            p.basic_stream(datetime.date(2017, 5, 27), data),
+            expected_result)
+
+
+    def test_2400_bug(self):
+        data = [
+            [
+                'May17\nFri', '6001', '16:50', '17:50', 'BRS', 'FAO', '20:25', '(320)', '',
+                '6002', '20:55', 'FAO', 'BRS', '23:30', '24:00', '(320)', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '']]
+        expected_result = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 5, 17), text='6001'),
+            datetime.datetime(2019, 5, 17, 16, 50),
+            datetime.datetime(2019, 5, 17, 17, 50),
+            p.DStr(date=datetime.date(2019, 5, 17), text='BRS'),
+            p.DStr(date=datetime.date(2019, 5, 17), text='FAO'),
+            datetime.datetime(2019, 5, 17, 20, 25),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 5, 17), text='6002'),
+            datetime.datetime(2019, 5, 17, 20, 55),
+            p.DStr(date=datetime.date(2019, 5, 17), text='FAO'),
+            p.DStr(date=datetime.date(2019, 5, 17), text='BRS'),
+            datetime.datetime(2019, 5, 17, 23, 30),
+            datetime.datetime(2019, 5, 18, 0, 0), #trickys bit
+            p.Break.COLUMN]
+        self.assertEqual(
+            p.basic_stream(datetime.date(2019, 5, 17), data),
+            expected_result)
+
+
 class Test_duty(unittest.TestCase):
 
     def test_standard_trip(self):
