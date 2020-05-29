@@ -167,8 +167,10 @@ def basic_stream(date: dt.date, columns: List[Column]
     :returns: A list of datetime, DStr or Break objects. The stream returned
         from this function includes COLUMN and LINE breaks, but no DUTY breaks.
     """
+    assert isinstance(date, dt.date) and isinstance(columns, (list, tuple))
     stream: RosterStream = [Break.COLUMN]
     for col in columns:
+        if len(col) < 2: continue
         if col[0] == "": break #column has no header means we're finished
         for entry in col[1:]:
             if entry == "" and not isinstance(stream[-1], Break):
