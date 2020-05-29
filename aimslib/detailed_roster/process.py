@@ -278,7 +278,7 @@ def _duty(stream):
 
     :returns: An aimslib Duty object
     """
-    assert isinstance(stream, list) or isinstance(stream, tuple)
+    assert isinstance(stream, (list, tuple))
     assert False not in [type(X) in (DStr, dt.datetime, Break)
                          for X in stream]
     if len(stream) <= 1: return None #empty stream or some sort of day off
