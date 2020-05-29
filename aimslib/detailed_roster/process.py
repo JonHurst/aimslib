@@ -167,12 +167,12 @@ def basic_stream(date: dt.date, columns: List[Column]
     :returns: A list of datetime, DStr or Break objects. The stream returned
         from this function includes all three types of Break.
     """
-    eventstream: RosterStream = [Break.COLUMN]
+    stream: RosterStream = [Break.COLUMN]
     for col in columns:
         if col[0] == "": break #column has no header means we're finished
         for entry in col[1:]:
-            if entry == "" and not isinstance(eventstream[-1], Break):
-                eventstream.append(Break.LINE)
+            if entry == "" and not isinstance(stream[-1], Break):
+                stream.append(Break.LINE)
             elif (len(entry) <= 2 or #ignore single and double letter codes
                   entry[0] == "(" or #ignore any bracketed code
                   entry == "EZS"): #ignore code indicating an EZS flight
@@ -180,36 +180,36 @@ def basic_stream(date: dt.date, columns: List[Column]
             elif len(entry) == 5 and entry[2] == ":": #found a time
                 #bug workaround: roster uses non-existent time "24:00"
                 if entry == "24:00":
-                    eventstream.append(
+                    stream.append(
                         dt.datetime.combine(
                             date + dt.timedelta(days=1),
                             dt.time(0, 0)))
                 else:
                     time = dt.time(int(entry[:2]), int(entry[3:]))
-                    eventstream.append(dt.datetime.combine(date, time))
+                    stream.append(dt.datetime.combine(date, time))
             else:
-                eventstream.append(DStr(date, entry))
+                stream.append(DStr(date, entry))
         date += dt.timedelta(days=1)
         #remove trailing line break
-        if isinstance(eventstream[-1], Break): del eventstream[-1]
+        if isinstance(stream[-1], Break): del stream[-1]
         #append the column break
-        eventstream.append(Break.COLUMN)
+        stream.append(Break.COLUMN)
     #there is a corner case where a sector finish time is dragged into the next
     #column by a duty time finishing after midnight, and another where a sector
     #time uses 24:00 as a start time but advances this to where 00:00 should
     #correctly sit. To counteract these cases, make sure datetimes in a reversed
-    #eventstream only ever decrease.
-    eventstream.reverse()
-    for c, event in enumerate(eventstream):
+    #stream only ever decrease.
+    stream.reverse()
+    for c, event in enumerate(stream):
         if isinstance(event, Break) and event == Break.COLUMN:
             last_datetime = dt.datetime(9999, 1, 1)
         elif isinstance(event, dt.datetime):
             if event > last_datetime:
                 event -= dt.timedelta(days=1)
-                eventstream[c] = event
+                stream[c] = event
             last_datetime = event
-    eventstream.reverse()
-    return eventstream
+    stream.reverse()
+    return stream
 
 
 def duty_stream(eventstream):
