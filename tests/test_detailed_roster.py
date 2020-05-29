@@ -8,7 +8,7 @@ import aimslib.common.types as T
 
 class Test_basic_stream(unittest.TestCase):
 
-    def test_standard_overnight(self):
+    def test_standard_overnights(self):
         data = [
             [
                 'Oct21\nMon', '6245', '05:30', '06:34', 'BRS', 'FNC', '09:45', '(320)', '',
@@ -55,6 +55,90 @@ class Test_basic_stream(unittest.TestCase):
             p.Break.COLUMN]
         self.assertEqual(
             p.basic_stream(datetime.date(2019, 10, 21), data),
+            expected_result)
+
+
+    def test_blank_column(self):
+        data = [
+            ['Oct31\nThu', 'D/O', '', '', '', '', '', '', '', '', '', '', '',
+             '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+             '', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+             '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+             '', '', '']]
+        expected_result = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 31), text='D/O'),
+            p.Break.COLUMN]
+        self.assertEqual(
+            p.basic_stream(datetime.date(2019, 10, 31), data),
+            expected_result)
+
+
+    def test_extra_codes(self):
+        data = [
+            ['Sep11\nWed', 'l', '6189', '05:20', '06:46', 'BRS', 'PSA', '08:46', '', 'l',
+             '6190', '09:22', 'PSA', 'BRS', '11:49', '12:19', '', '', '', '', '', '', '',
+             '', '', '', '', '', '', '', '', '']]
+        expected_result = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 9, 11), text='6189'),
+            datetime.datetime(2019, 9, 11, 5, 20),
+            datetime.datetime(2019, 9, 11, 6, 46),
+            p.DStr(date=datetime.date(2019, 9, 11), text='BRS'),
+            p.DStr(date=datetime.date(2019, 9, 11), text='PSA'),
+            datetime.datetime(2019, 9, 11, 8, 46),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 9, 11), text='6190'),
+            datetime.datetime(2019, 9, 11, 9, 22),
+            p.DStr(date=datetime.date(2019, 9, 11), text='PSA'),
+            p.DStr(date=datetime.date(2019, 9, 11), text='BRS'),
+            datetime.datetime(2019, 9, 11, 11, 49),
+            datetime.datetime(2019, 9, 11, 12, 19),
+            p.Break.COLUMN]
+        self.assertEqual(
+            p.basic_stream(datetime.date(2019, 9, 11), data),
+            expected_result)
+
+
+    def test_across_midnight(self):
+        data = [
+            [
+                'May18\nSat', '6045', '17:45', '18:45', 'BRS', 'PMI', '21:00',
+                '', '6046', '21:35', 'PMI', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '', ''],
+            [
+                'May19\nSun', 'BRS', '23:55', '00:25', '', 'REST', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', ''],
+
+            [
+                'May20\nMon', 'D/O', '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '']]
+        expected_result = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 5, 18), text='6045'),
+            datetime.datetime(2019, 5, 18, 17, 45),
+            datetime.datetime(2019, 5, 18, 18, 45),
+            p.DStr(date=datetime.date(2019, 5, 18), text='BRS'),
+            p.DStr(date=datetime.date(2019, 5, 18), text='PMI'),
+            datetime.datetime(2019, 5, 18, 21, 0),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 5, 18), text='6046'),
+            datetime.datetime(2019, 5, 18, 21, 35),
+            p.DStr(date=datetime.date(2019, 5, 18), text='PMI'),
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 5, 19), text='BRS'),
+            datetime.datetime(2019, 5, 18, 23, 55),
+            datetime.datetime(2019, 5, 19, 0, 25),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 5, 19), text='REST'),
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 5, 20), text='D/O'),
+            p.Break.COLUMN]
+        self.assertEqual(
+            p.basic_stream(datetime.date(2019, 5, 18), data),
             expected_result)
 
 
