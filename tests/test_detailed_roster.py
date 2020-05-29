@@ -8,17 +8,17 @@ import aimslib.common.types as T
 class Test_duty(unittest.TestCase):
 
     def test_standard_trip(self):
-        data = [ p.Event(datetime.date(2017, 10, 17), '6195'),
+        data = [ p.DStr(datetime.date(2017, 10, 17), '6195'),
                  datetime.datetime(2017, 10, 17, 4, 30),
                  datetime.datetime(2017, 10, 17, 5, 40),
-                 p.Event(datetime.date(2017, 10, 17), 'BRS'),
-                 p.Event(datetime.date(2017, 10, 17), 'LPA'),
+                 p.DStr(datetime.date(2017, 10, 17), 'BRS'),
+                 p.DStr(datetime.date(2017, 10, 17), 'LPA'),
                  datetime.datetime(2017, 10, 17, 10, 7),
-                 p.Break(0),
-                 p.Event(datetime.date(2017, 10, 17), '6196'),
+                 p.Break.LINE,
+                 p.DStr(datetime.date(2017, 10, 17), '6196'),
                  datetime.datetime(2017, 10, 17, 11, 7),
-                 p.Event(datetime.date(2017, 10, 17), 'LPA'),
-                 p.Event(datetime.date(2017, 10, 17), 'BRS'),
+                 p.DStr(datetime.date(2017, 10, 17), 'LPA'),
+                 p.DStr(datetime.date(2017, 10, 17), 'BRS'),
                  datetime.datetime(2017, 10, 17, 14, 48),
                  datetime.datetime(2017, 10, 17, 15, 18) ]
         expected_result = T.Duty(
@@ -45,7 +45,7 @@ class Test_duty(unittest.TestCase):
 
     def test_standard_standby(self):
         data = [
-            p.Event(datetime.date(2017, 1, 17), 'ESBY'),
+            p.DStr(datetime.date(2017, 1, 17), 'ESBY'),
             datetime.datetime(2017, 1, 17, 6, 15),
             datetime.datetime(2017, 1, 17, 14, 15)]
         expected_result = T.Duty(
@@ -66,15 +66,15 @@ class Test_duty(unittest.TestCase):
 
     def test_standby_then_postioning(self):
         data = [
-            p.Event(datetime.date(2017, 10, 22), 'LSBY'),
+            p.DStr(datetime.date(2017, 10, 22), 'LSBY'),
             datetime.datetime(2017, 10, 22, 10, 0),
             datetime.datetime(2017, 10, 22, 18, 0),
-            p.Break(0),
-            p.Event(datetime.date(2017, 10, 22), '6140'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 10, 22), '6140'),
             datetime.datetime(2017, 10, 22, 18, 10),
             datetime.datetime(2017, 10, 22, 19, 28),
-            p.Event(datetime.date(2017, 10, 22), '*TLS'),
-            p.Event(datetime.date(2017, 10, 22), 'BRS'),
+            p.DStr(datetime.date(2017, 10, 22), '*TLS'),
+            p.DStr(datetime.date(2017, 10, 22), 'BRS'),
             datetime.datetime(2017, 10, 22, 21, 25),
             datetime.datetime(2017, 10, 22, 21, 40)]
         expected_result = T.Duty(
@@ -103,22 +103,22 @@ class Test_duty(unittest.TestCase):
 
     def test_return_to_stand_and_sector_across_end_of_roster(self):
         data = [
-            p.Event(datetime.date(2016, 10, 31), '6073R'),
+            p.DStr(datetime.date(2016, 10, 31), '6073R'),
             datetime.datetime(2016, 10, 31, 15, 30),
             datetime.datetime(2016, 10, 31, 16, 30),
-            p.Event(datetime.date(2016, 10, 31), 'BRS'),
-            p.Event(datetime.date(2016, 10, 31), 'BRS'),
+            p.DStr(datetime.date(2016, 10, 31), 'BRS'),
+            p.DStr(datetime.date(2016, 10, 31), 'BRS'),
             datetime.datetime(2016, 10, 31, 16, 45),
-            p.Break(0),
-            p.Event(datetime.date(2016, 10, 31), '6073'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2016, 10, 31), '6073'),
             datetime.datetime(2016, 10, 31, 18, 43),
-            p.Event(datetime.date(2016, 10, 31), 'BRS'),
-            p.Event(datetime.date(2016, 10, 31), 'ALC'),
+            p.DStr(datetime.date(2016, 10, 31), 'BRS'),
+            p.DStr(datetime.date(2016, 10, 31), 'ALC'),
             datetime.datetime(2016, 10, 31, 21, 4),
-            p.Break(0),
-            p.Event(datetime.date(2016, 10, 31), '6074'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2016, 10, 31), '6074'),
             datetime.datetime(2016, 10, 31, 21, 39),
-            p.Event(datetime.date(2016, 10, 31), 'ALC')]
+            p.DStr(datetime.date(2016, 10, 31), 'ALC')]
         expected_result = T.Duty(
             T.TripID('13453', ''),
             datetime.datetime(2016, 10, 31, 15, 30),
@@ -151,27 +151,27 @@ class Test_duty(unittest.TestCase):
 
     def test_airport_standby_callout_and_diversion(self):
         data = [
-            p.Event(datetime.date(2016, 10, 22), 'ADTY'),
+            p.DStr(datetime.date(2016, 10, 22), 'ADTY'),
             datetime.datetime(2016, 10, 22, 5, 0),
             datetime.datetime(2016, 10, 22, 5, 0),
             datetime.datetime(2016, 10, 22, 5, 5),
-            p.Break(0),
-            p.Event(datetime.date(2016, 10, 22), '393'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2016, 10, 22), '393'),
             datetime.datetime(2016, 10, 22, 6, 7),
-            p.Event(datetime.date(2016, 10, 22), 'BRS'),
-            p.Event(datetime.date(2016, 10, 22), 'INV'),
+            p.DStr(datetime.date(2016, 10, 22), 'BRS'),
+            p.DStr(datetime.date(2016, 10, 22), 'INV'),
             datetime.datetime(2016, 10, 22, 7, 35),
-            p.Break(0),
-            p.Event(datetime.date(2016, 10, 22), '394'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2016, 10, 22), '394'),
             datetime.datetime(2016, 10, 22, 8, 12),
-            p.Event(datetime.date(2016, 10, 22), 'INV'),
-            p.Event(datetime.date(2016, 10, 22), 'CWL'),
+            p.DStr(datetime.date(2016, 10, 22), 'INV'),
+            p.DStr(datetime.date(2016, 10, 22), 'CWL'),
             datetime.datetime(2016, 10, 22, 9, 26),
-            p.Break(0),
-            p.Event(datetime.date(2016, 10, 22), '394'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2016, 10, 22), '394'),
             datetime.datetime(2016, 10, 22, 10, 50),
-            p.Event(datetime.date(2016, 10, 22), 'CWL'),
-            p.Event(datetime.date(2016, 10, 22), 'BRS'),
+            p.DStr(datetime.date(2016, 10, 22), 'CWL'),
+            p.DStr(datetime.date(2016, 10, 22), 'BRS'),
             datetime.datetime(2016, 10, 22, 11, 13),
             datetime.datetime(2016, 10, 22, 11, 43)]
         expected_result = T.Duty(
@@ -216,21 +216,21 @@ class Test_duty(unittest.TestCase):
 
     def test_loe_with_ground_positioning(self):
         data = [
-            p.Event(datetime.date(2017, 5, 28), 'TAXI'),
+            p.DStr(datetime.date(2017, 5, 28), 'TAXI'),
             datetime.datetime(2017, 5, 28, 13, 15),
             datetime.datetime(2017, 5, 28, 13, 15),
-            p.Event(datetime.date(2017, 5, 28), '*BRS'),
-            p.Event(datetime.date(2017, 5, 28), 'XWS'),
+            p.DStr(datetime.date(2017, 5, 28), '*BRS'),
+            p.DStr(datetime.date(2017, 5, 28), 'XWS'),
             datetime.datetime(2017, 5, 28, 16, 45),
-            p.Break(0),
-            p.Event(datetime.date(2017, 5, 28), 'LOEV'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 5, 28), 'LOEV'),
             datetime.datetime(2017, 5, 28, 18, 15),
             datetime.datetime(2017, 5, 28, 22, 15),
-            p.Break(0),
-            p.Event(datetime.date(2017, 5, 28), 'TAXI'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 5, 28), 'TAXI'),
             datetime.datetime(2017, 5, 28, 23, 15),
-            p.Event(datetime.date(2017, 5, 28), '*XWS'),
-            p.Event(datetime.date(2017, 5, 28), 'MAN'),
+            p.DStr(datetime.date(2017, 5, 28), '*XWS'),
+            p.DStr(datetime.date(2017, 5, 28), 'MAN'),
             datetime.datetime(2017, 5, 28, 23, 45),
             datetime.datetime(2017, 5, 28, 23, 45)]
         expected_result = T.Duty(
@@ -267,25 +267,25 @@ class Test_duty(unittest.TestCase):
 
     def test_callout_to_asby_then_callout_to_fly(self):
         data = [
-            p.Event(datetime.date(2017, 8, 6), 'LSBY'),
+            p.DStr(datetime.date(2017, 8, 6), 'LSBY'),
             datetime.datetime(2017, 8, 6, 12, 40),
             datetime.datetime(2017, 8, 6, 17, 0),
-            p.Break(0),
-            p.Event(datetime.date(2017, 8, 6), 'ADTY'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 8, 6), 'ADTY'),
             datetime.datetime(2017, 8, 6, 17, 0),
             datetime.datetime(2017, 8, 6, 17, 0),
             datetime.datetime(2017, 8, 6, 17, 45),
-            p.Break(0),
-            p.Event(datetime.date(2017, 8, 6), '6045'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 8, 6), '6045'),
             datetime.datetime(2017, 8, 6, 21, 10),
-            p.Event(datetime.date(2017, 8, 6), 'BRS'),
-            p.Event(datetime.date(2017, 8, 6), 'PMI'),
+            p.DStr(datetime.date(2017, 8, 6), 'BRS'),
+            p.DStr(datetime.date(2017, 8, 6), 'PMI'),
             datetime.datetime(2017, 8, 6, 23, 22),
-            p.Break(0),
-            p.Event(datetime.date(2017, 8, 7), '6046'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 8, 7), '6046'),
             datetime.datetime(2017, 8, 7, 0, 29),
-            p.Event(datetime.date(2017, 8, 7), 'PMI'),
-            p.Event(datetime.date(2017, 8, 7), 'BRS'),
+            p.DStr(datetime.date(2017, 8, 7), 'PMI'),
+            p.DStr(datetime.date(2017, 8, 7), 'BRS'),
             datetime.datetime(2017, 8, 7, 2, 46),
             datetime.datetime(2017, 8, 7, 3, 16)]
         expected_result = T.Duty(
@@ -326,7 +326,7 @@ class Test_duty(unittest.TestCase):
 
     def test_lpc(self):
         data = [
-            p.Event(datetime.date(2019, 10, 28), 'LIPC'),
+            p.DStr(datetime.date(2019, 10, 28), 'LIPC'),
             datetime.datetime(2019, 10, 28, 17, 0),
             datetime.datetime(2019, 10, 28, 18, 30),
             datetime.datetime(2019, 10, 28, 22, 30),
@@ -353,7 +353,7 @@ class Test_duty(unittest.TestCase):
 
 
     def test_day_off(self):
-        data = [p.Event(datetime.date(2019, 10, 24), 'D/O')]
+        data = [p.DStr(datetime.date(2019, 10, 24), 'D/O')]
         self.assertEqual(p._duty(data), None)
 
 
@@ -363,17 +363,17 @@ class Test_duty(unittest.TestCase):
             p._duty(data)
 
         data = [
-            p.Event(datetime.date(2017, 10, 17), '6195'),
+            p.DStr(datetime.date(2017, 10, 17), '6195'),
             datetime.datetime(2017, 10, 17, 4, 30),
             datetime.datetime(2017, 10, 17, 5, 40),
-            p.Event(datetime.date(2017, 10, 17), 'BRS'),
-            p.Event(datetime.date(2017, 10, 17), 'LPA'),
+            p.DStr(datetime.date(2017, 10, 17), 'BRS'),
+            p.DStr(datetime.date(2017, 10, 17), 'LPA'),
             datetime.datetime(2017, 10, 17, 10, 7),
             "break", #bad break format
-            p.Event(datetime.date(2017, 10, 17), '6196'),
+            p.DStr(datetime.date(2017, 10, 17), '6196'),
             datetime.datetime(2017, 10, 17, 11, 7),
-            p.Event(datetime.date(2017, 10, 17), 'LPA'),
-            p.Event(datetime.date(2017, 10, 17), 'BRS'),
+            p.DStr(datetime.date(2017, 10, 17), 'LPA'),
+            p.DStr(datetime.date(2017, 10, 17), 'BRS'),
             datetime.datetime(2017, 10, 17, 14, 48),
             datetime.datetime(2017, 10, 17, 15, 18) ]
         with self.assertRaises(AssertionError):
@@ -382,48 +382,48 @@ class Test_duty(unittest.TestCase):
         data = [#missing first entry
             datetime.datetime(2017, 10, 17, 4, 30),
             datetime.datetime(2017, 10, 17, 5, 40),
-            p.Event(datetime.date(2017, 10, 17), 'BRS'),
-            p.Event(datetime.date(2017, 10, 17), 'LPA'),
+            p.DStr(datetime.date(2017, 10, 17), 'BRS'),
+            p.DStr(datetime.date(2017, 10, 17), 'LPA'),
             datetime.datetime(2017, 10, 17, 10, 7),
-            p.Break(0),
-            p.Event(datetime.date(2017, 10, 17), '6196'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 10, 17), '6196'),
             datetime.datetime(2017, 10, 17, 11, 7),
-            p.Event(datetime.date(2017, 10, 17), 'LPA'),
-            p.Event(datetime.date(2017, 10, 17), 'BRS'),
+            p.DStr(datetime.date(2017, 10, 17), 'LPA'),
+            p.DStr(datetime.date(2017, 10, 17), 'BRS'),
             datetime.datetime(2017, 10, 17, 14, 48),
             datetime.datetime(2017, 10, 17, 15, 18) ]
         with self.assertRaises(p.SectorFormatException):
             print(p._duty(data))
 
         data = [
-            p.Event(datetime.date(2017, 10, 17), '6195'),
+            p.DStr(datetime.date(2017, 10, 17), '6195'),
             datetime.datetime(2017, 10, 17, 4, 30),
             datetime.datetime(2017, 10, 17, 5, 40),
             #missing from or to
-            p.Event(datetime.date(2017, 10, 17), 'LPA'),
+            p.DStr(datetime.date(2017, 10, 17), 'LPA'),
             datetime.datetime(2017, 10, 17, 10, 7),
-            p.Break(0),
-            p.Event(datetime.date(2017, 10, 17), '6196'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 10, 17), '6196'),
             datetime.datetime(2017, 10, 17, 11, 7),
-            p.Event(datetime.date(2017, 10, 17), 'LPA'),
-            p.Event(datetime.date(2017, 10, 17), 'BRS'),
+            p.DStr(datetime.date(2017, 10, 17), 'LPA'),
+            p.DStr(datetime.date(2017, 10, 17), 'BRS'),
             datetime.datetime(2017, 10, 17, 14, 48),
             datetime.datetime(2017, 10, 17, 15, 18) ]
         with self.assertRaises(p.SectorFormatException):
             print(p._duty(data))
 
         data = [
-            p.Event(datetime.date(2017, 10, 17), '6195'),
+            p.DStr(datetime.date(2017, 10, 17), '6195'),
             datetime.datetime(2017, 10, 17, 4, 30),
             datetime.datetime(2017, 10, 17, 5, 40),
-            p.Event(datetime.date(2017, 10, 17), 'BRS'),
-            p.Event(datetime.date(2017, 10, 17), 'LPA'),
+            p.DStr(datetime.date(2017, 10, 17), 'BRS'),
+            p.DStr(datetime.date(2017, 10, 17), 'LPA'),
             datetime.datetime(2017, 10, 17, 10, 7),
-            p.Break(0),
-            p.Event(datetime.date(2017, 10, 17), '6196'),
+            p.Break.LINE,
+            p.DStr(datetime.date(2017, 10, 17), '6196'),
             datetime.datetime(2017, 10, 17, 11, 7),
-            p.Event(datetime.date(2017, 10, 17), 'LPA'),
-            p.Event(datetime.date(2017, 10, 17), 'BRS')]
+            p.DStr(datetime.date(2017, 10, 17), 'LPA'),
+            p.DStr(datetime.date(2017, 10, 17), 'BRS')]
         #end data missing but wrong for midnight over last entry case
         with self.assertRaises(p.SectorFormatException):
             print(p._duty(data))
