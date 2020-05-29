@@ -44,7 +44,9 @@ class DStr(NamedTuple):
     text: str
 
 
-EventStream = List[Union[DStr, Break, dt.datetime]]
+RosterStream = List[Union[DStr, Break, dt.datetime]]
+Column = List[str]
+Line = List[str]
 
 
 class DetailedRosterException(Exception):
@@ -91,7 +93,7 @@ class RosterParser(HTMLParser):
             self.output_list[-1][-1] += data
 
 
-def lines(roster:str) -> List[List[str]]:
+def lines(roster:str) -> List[Line]:
     """
     Turn an AIMS roster into a list of lines, each line being represented by a list of cells.
 
@@ -127,7 +129,7 @@ def extract_date(lines: List[List[str]]) -> dt.date:
     return dt.datetime.strptime(mo.group(1), "%d/%m/%Y").date()
 
 
-def columns(lines: List[List[str]]) -> List[List[str]]:
+def columns(lines: List[Line]) -> List[Column]:
     """
     Convert 'lines' format input to 'columns' format output.
 
