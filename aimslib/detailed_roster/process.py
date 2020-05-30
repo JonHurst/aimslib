@@ -235,12 +235,11 @@ def duty_stream(bstream):
             isinstance(bstream[c + 1], Break)):
             dstream[c - 1] = Break.DUTY
             dstream[c + 1] = Break.DUTY
-    #any remaining Break.COLUMN objects with a DStr either side are midnight
-    #continuations, which should be removed.
+    #any remaining Break.COLUMN objects with a DStr either side or a datetime
+    #either side are midnight continuations, which should be removed.
     for c in range(1, len(dstream) - 1):
         if (dstream[c] == Break.COLUMN and
-            isinstance(dstream[c - 1], DStr) and
-            isinstance(dstream[c + 1], DStr)):
+            type(dstream[c - 1]) == type(dstream[c + 1])):
             dstream[c] = None
     dstream = [X for X in dstream if X]
     #remaining Break.COLUMN objects are either duty breaks if separated by more
