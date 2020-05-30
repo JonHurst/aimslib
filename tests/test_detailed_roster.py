@@ -192,6 +192,37 @@ class Test_basic_stream(unittest.TestCase):
             expected_result)
 
 
+    def test_lpc_across_midnight(self):
+        data = [
+            [
+                'Apr28\nSun', 'LOE', '19:00', '20:30', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', ''],
+            ['Apr29\nMon', '00:30', '01:30', '', '6224', '16:00', '17:00',
+             '*CDG', 'BRS', '18:08', '18:23', '', '', '', '', '', '',
+             '', '', '', '', '', '', '', '', '', '', '', '', '', 'M', '']]
+        expected_result = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 4, 28), text='LOE'),
+            datetime.datetime(2019, 4, 28, 19, 0),
+            datetime.datetime(2019, 4, 28, 20, 30),
+            p.Break.COLUMN,
+            datetime.datetime(2019, 4, 29, 0, 30),
+            datetime.datetime(2019, 4, 29, 1, 30),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 4, 29), text='6224'),
+            datetime.datetime(2019, 4, 29, 16, 0),
+            datetime.datetime(2019, 4, 29, 17, 0),
+            p.DStr(date=datetime.date(2019, 4, 29), text='*CDG'),
+            p.DStr(date=datetime.date(2019, 4, 29), text='BRS'),
+            datetime.datetime(2019, 4, 29, 18, 8),
+            datetime.datetime(2019, 4, 29, 18, 23),
+            p.Break.COLUMN]
+        self.assertEqual(
+            p.basic_stream(datetime.date(2019, 4, 28), data),
+            expected_result)
+
+
     def test_dragover_case(self):
         data = [
             [
@@ -895,4 +926,37 @@ class TestDutyStream(unittest.TestCase):
             datetime.datetime(2019, 10, 29, 13, 30)]
         self.assertEqual(p.duty_stream(data), expected_result)
 
-#        for e in p.duty_stream(data): print(repr(e) + ",")
+
+    def test_lpc_over_midnight(self):
+        data = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 4, 28), text='LOE'),
+            datetime.datetime(2019, 4, 28, 19, 0),
+            datetime.datetime(2019, 4, 28, 20, 30),
+            p.Break.COLUMN,
+            datetime.datetime(2019, 4, 29, 0, 30),
+            datetime.datetime(2019, 4, 29, 1, 30),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 4, 29), text='6224'),
+            datetime.datetime(2019, 4, 29, 16, 0),
+            datetime.datetime(2019, 4, 29, 17, 0),
+            p.DStr(date=datetime.date(2019, 4, 29), text='*CDG'),
+            p.DStr(date=datetime.date(2019, 4, 29), text='BRS'),
+            datetime.datetime(2019, 4, 29, 18, 8),
+            datetime.datetime(2019, 4, 29, 18, 23),
+            p.Break.COLUMN]
+        expected_result = [
+            p.DStr(date=datetime.date(2019, 4, 28), text='LOE'),
+            datetime.datetime(2019, 4, 28, 19, 0),
+            datetime.datetime(2019, 4, 28, 20, 30),
+            datetime.datetime(2019, 4, 29, 0, 30),
+            datetime.datetime(2019, 4, 29, 1, 30),
+            p.Break.DUTY,
+            p.DStr(date=datetime.date(2019, 4, 29), text='6224'),
+            datetime.datetime(2019, 4, 29, 16, 0),
+            datetime.datetime(2019, 4, 29, 17, 0),
+            p.DStr(date=datetime.date(2019, 4, 29), text='*CDG'),
+            p.DStr(date=datetime.date(2019, 4, 29), text='BRS'),
+            datetime.datetime(2019, 4, 29, 18, 8),
+            datetime.datetime(2019, 4, 29, 18, 23)]
+        self.assertEqual(p.duty_stream(data), expected_result)
