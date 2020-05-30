@@ -960,3 +960,67 @@ class TestDutyStream(unittest.TestCase):
             datetime.datetime(2019, 4, 29, 18, 8),
             datetime.datetime(2019, 4, 29, 18, 23)]
         self.assertEqual(p.duty_stream(data), expected_result)
+
+
+    def test_badstream(self):
+        with self.assertRaises(AssertionError):
+            p.duty_stream(None)
+        with self.assertRaises(AssertionError):
+            p.duty_stream("string")
+        with self.assertRaises(AssertionError):
+            p.duty_stream(["string1", "string2"])
+        data = [#random segment
+            datetime.datetime(2019, 4, 28, 20, 30),
+            p.Break.COLUMN,
+            datetime.datetime(2019, 4, 29, 0, 30)
+            ]
+        with self.assertRaises(AssertionError):
+            p.duty_stream(data)
+        data = [#dstream
+            p.DStr(date=datetime.date(2019, 4, 28), text='LOE'),
+            datetime.datetime(2019, 4, 28, 19, 0),
+            datetime.datetime(2019, 4, 28, 20, 30),
+            datetime.datetime(2019, 4, 29, 0, 30),
+            datetime.datetime(2019, 4, 29, 1, 30),
+            p.Break.DUTY,
+            p.DStr(date=datetime.date(2019, 4, 29), text='6224'),
+            datetime.datetime(2019, 4, 29, 16, 0),
+            datetime.datetime(2019, 4, 29, 17, 0),
+            p.DStr(date=datetime.date(2019, 4, 29), text='*CDG'),
+            p.DStr(date=datetime.date(2019, 4, 29), text='BRS'),
+            datetime.datetime(2019, 4, 29, 18, 8),
+            datetime.datetime(2019, 4, 29, 18, 23)]
+        with self.assertRaises(AssertionError):
+            p.duty_stream(data)
+        data = [
+            p.Break.COLUMN,
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 4, 28), text='LOE'),
+            datetime.datetime(2019, 4, 28, 19, 0),
+            p.Break.COLUMN]
+        with self.assertRaises(p.SectorFormatException):
+            p.duty_stream(data)
+        data = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 21), text='6245'),
+            datetime.datetime(2019, 10, 21, 5, 30),
+            datetime.datetime(2019, 10, 21, 6, 34),
+            p.Break.COLUMN,#bad column break
+            p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
+            p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
+            datetime.datetime(2019, 10, 21, 9, 45),
+            p.Break.COLUMN]
+        with self.assertRaises(p.SectorFormatException):
+            p.duty_stream(data)
+        data = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 21), text='6245'),
+            datetime.datetime(2019, 10, 21, 5, 30),
+            datetime.datetime(2019, 10, 21, 6, 34),
+            p.Break.LINE,#bad line break
+            p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
+            p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
+            datetime.datetime(2019, 10, 21, 9, 45),
+            p.Break.COLUMN]
+        with self.assertRaises(p.SectorFormatException):
+            p.duty_stream(data)

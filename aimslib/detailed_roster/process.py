@@ -221,12 +221,17 @@ def duty_stream(bstream):
     """Processed an basic stream into a duty stream.
 
     :param bstream: A stream of datetime, DStr and Break objects, where
-        the Break objects are either Break.Line or Break.Column
+        the Break objects are either Break.LINE or Break.COLUMN
 
     :return: A duty stream: a stream of datetime, DStr and Break objects,
-         where the Break objects are either Break.Sector or Break.Duty
+         where the Break objects are either Break.SECTOR or Break.DUTY
     """
-
+    assert isinstance(bstream, (list, tuple))
+    assert False not in [isinstance(X, (DStr, Break, dt.datetime))
+                         for X in bstream]
+    assert False not in [X in (Break.LINE, Break.COLUMN) for X in bstream
+                         if isinstance(X, Break)]
+    assert bstream[0] == Break.COLUMN and bstream[-1] == Break.COLUMN
     dstream = bstream[:]
     #a DStr surrounded by Break objects is an all day duty of some sort
     for c in range(1, len(bstream) - 1):
