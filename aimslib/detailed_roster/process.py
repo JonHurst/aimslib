@@ -242,7 +242,7 @@ def duty_stream(bstream):
             type(dstream[c - 1]) == type(dstream[c + 1])):
             dstream[c] = None
     dstream = [X for X in dstream if X]
-    #remaining Break.COLUMN objects are either duty breaks if separated by more
+    #remaining Break objects are either duty breaks if separated by more
     #than 8 hours, else they are sector breaks
     for c in range(1, len(dstream) - 2):
         if dstream[c] in (Break.LINE, Break.COLUMN):
