@@ -170,8 +170,10 @@ def basic_stream(date: dt.date, columns: List[Column]
     assert isinstance(date, dt.date) and isinstance(columns, (list, tuple))
     stream: RosterStream = [Break.COLUMN]
     for col in columns:
+        assert isinstance(col, (list, tuple))
         if len(col) < 2: continue
         if col[0] == "": break #column has no header means we're finished
+        assert False not in [isinstance(X, str) for X in col[1:]]
         for entry in col[1:]:
             if entry == "" and not isinstance(stream[-1], Break):
                 stream.append(Break.LINE)
@@ -179,18 +181,18 @@ def basic_stream(date: dt.date, columns: List[Column]
                   entry[0] == "(" or #ignore any bracketed code
                   entry == "EZS"): #ignore code indicating an EZS flight
                 continue
-            elif len(entry) == 5 and entry[2] == ":": #found a time
-                #bug workaround: roster uses non-existent time "24:00"
-                if entry == "24:00":
-                    stream.append(
-                        dt.datetime.combine(
-                            date + dt.timedelta(days=1),
-                            dt.time(0, 0)))
-                else:
-                    time = dt.time(int(entry[:2]), int(entry[3:]))
-                    stream.append(dt.datetime.combine(date, time))
+            #bug workaround: roster uses non-existent time "24:00"
+            elif entry == "24:00":
+                stream.append(
+                    dt.datetime.combine(
+                        date + dt.timedelta(days=1),
+                        dt.time(0, 0)))
             else:
-                stream.append(DStr(date, entry))
+                try: #try to treat entry like a time
+                    time = dt.datetime.strptime(entry, "%H:%M").time()
+                    stream.append(dt.datetime.combine(date, time))
+                except ValueError: #if that fails, treat it like a string
+                    stream.append(DStr(date, entry))
         date += dt.timedelta(days=1)
         #remove trailing line break
         if isinstance(stream[-1], Break): del stream[-1]

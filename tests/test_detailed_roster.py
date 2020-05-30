@@ -211,11 +211,46 @@ class Test_basic_stream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 5, 17), text='FAO'),
             p.DStr(date=datetime.date(2019, 5, 17), text='BRS'),
             datetime.datetime(2019, 5, 17, 23, 30),
-            datetime.datetime(2019, 5, 18, 0, 0), #trickys bit
+            datetime.datetime(2019, 5, 18, 0, 0), #tricksy bit
             p.Break.COLUMN]
         self.assertEqual(
             p.basic_stream(datetime.date(2019, 5, 17), data),
             expected_result)
+
+
+    def test_bad_input_formats(self):
+        with self.assertRaises(AssertionError):
+            p.basic_stream(None, [[]])
+        with self.assertRaises(AssertionError):
+            p.basic_stream("bad", [[]])
+        with self.assertRaises(AssertionError):
+            p.basic_stream(datetime.date(2019, 1, 1), None)
+        with self.assertRaises(AssertionError):
+            p.basic_stream(datetime.date(2019, 1, 1), [1, 2])
+        with self.assertRaises(AssertionError):
+            p.basic_stream(datetime.date(2019, 1, 1), [["AAA", "BBB", 1]])
+
+
+    def test_bad_time(self):
+        """Bad times should be tagged as strings"""
+        data = [
+            [
+                'May17\nFri', '6001', '16:50', '17:50', 'BRS', 'FAO',
+                '20:25', '24:30']]
+        expected_result = [
+            p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 5, 17), text='6001'),
+            datetime.datetime(2019, 5, 17, 16, 50),
+            datetime.datetime(2019, 5, 17, 17, 50),
+            p.DStr(date=datetime.date(2019, 5, 17), text='BRS'),
+            p.DStr(date=datetime.date(2019, 5, 17), text='FAO'),
+            datetime.datetime(2019, 5, 17, 20, 25),
+            p.DStr(date=datetime.date(2019, 5, 17), text='24:30'), #tricksy
+            p.Break.COLUMN]
+        self.assertEqual(
+            p.basic_stream(datetime.date(2019, 5, 17), data),
+            expected_result)
+
 
 
 class Test_duty(unittest.TestCase):
