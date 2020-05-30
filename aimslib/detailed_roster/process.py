@@ -37,6 +37,7 @@ class Break(enum.Enum):
     LINE = 0
     COLUMN = 1
     DUTY = 2
+    SECTOR = 3
 
 
 class DStr(NamedTuple):
@@ -216,67 +217,53 @@ def basic_stream(date: dt.date, columns: List[Column]
     return stream
 
 
-def duty_stream(eventstream):
-    """Processed an eventstream into a list of sublists, each sublist being the event stream of a duty
-    block.
+def duty_stream(bstream):
+    """Processed an basic stream into a duty stream.
 
-    The input is an 'Event stream' as described in the event_stream() function's docstring. The
-    function removes or replaces column breaks with line breaks as appropriate, then splits the
-    stream into substreams where 8 hours or more of rest appear to be available.
+    :param bstream: A stream of datetime, DStr and Break objects, where
+        the Break objects are either Break.Line or Break.Column
 
-    Output is of the form:
-
-    [
-        [/duty block event stream 1/], [/duty block event stream 2/], ...]
-    ]
+    :return: A duty stream: a stream of datetime, DStr and Break objects,
+         where the Break objects are either Break.Sector or Break.Duty
     """
-    #process column breaks, either to line breaks or by removal
-    c = 2
-    while c < len(eventstream) - 2:
-        event = eventstream[c]
-        if isinstance(event, Break) and event == Break.COLUMN:
-            #if the column break is preceded by a time but not followed by a time, or
-            #if there is a break two entries prior, it is a line break
-            if ((isinstance(eventstream[c-1], dt.datetime) and
-                 not isinstance(eventstream[c+1], dt.datetime)) or
-                isinstance(eventstream[c-2], Break)):
-                eventstream[c] = Break.LINE
-                c += 1
+
+    dstream = bstream[:]
+    #a DStr surrounded by Break objects is an all day duty of some sort
+    for c in range(1, len(bstream) - 1):
+        if (isinstance(bstream[c], DStr) and
+            isinstance(bstream[c - 1], Break) and
+            isinstance(bstream[c + 1], Break)):
+            dstream[c - 1] = Break.DUTY
+            dstream[c + 1] = Break.DUTY
+    #any remaining Break.COLUMN objects with a DStr either side are midnight
+    #continuations, which should be removed.
+    for c in range(1, len(dstream) - 1):
+        if (dstream[c] == Break.COLUMN and
+            isinstance(dstream[c - 1], DStr) and
+            isinstance(dstream[c + 1], DStr)):
+            dstream[c] = None
+    dstream = [X for X in dstream if X]
+    #remaining Break.COLUMN objects are either duty breaks if separated by more
+    #than 8 hours, else they are sector breaks
+    for c in range(1, len(dstream) - 2):
+        if dstream[c] in (Break.LINE, Break.COLUMN):
+            if (not isinstance(dstream[c - 1], dt.datetime) or
+                not isinstance(dstream[c + 2], dt.datetime)):
+                raise SectorFormatException
+            tdiff = (dstream[c + 2] - dstream[c - 1]).total_seconds()
+            if tdiff >= 8 * 3600:
+                dstream[c] = Break.DUTY
             else:
-                del eventstream[c]
-        else:
-            c += 1
-    #change line breaks to duty breaks around all day duties
-    c = 2
-    while c < len(eventstream):
-        #should only be line breaks in the field at this point
-        if isinstance(eventstream[c], Break) and isinstance(eventstream[c-2], Break):
-            #if there is a break two entries prior, both are duty breaks
-            eventstream[c] = eventstream[c-2] = Break.DUTY
-        c += 1
-    #change line breaks to duty breaks where the difference between times is
-    #greater than 8 hours
-    c = 2
-    while c < len(eventstream) - 2:
-        if (isinstance(eventstream[c], Break) and
-            eventstream[c] == Break.LINE and
-            eventstream[c+2] - eventstream[c-1] > dt.timedelta(hours=8)):
-            eventstream[c] = Break.DUTY
-        c += 1
-    #split up eventstream at duty breaks
-    duties = [[]]
-    for e in eventstream[1:-1]:
-        if isinstance(e, Break) and e == Break.DUTY:
-            duties.append([])
-        else:
-            duties[-1].append(e)
-    return duties
+                dstream[c] = Break.SECTOR
+    return dstream[1:-1]
 
 
 def _duty(stream):
     """Converts a 'Duty stream' into a list of aimslib Duty objects'
 
-    :param duty_stream: A duty stream, as output by duty_streams
+    :param duty_stream: A stream of DStr, datetime and Break objects, with
+        each stream representing one complete duty, i.e. all Break objects
+        must be Break.SECTOR only.
 
     :returns: An aimslib Duty object
     """
@@ -294,7 +281,7 @@ def _duty(stream):
         stream = list(stream) + [DStr(faketime.date(), "???"), faketime, faketime]
     if not isinstance(stream[0], DStr): raise SectorFormatException
     tripid = (str((stream[0].date - dt.date(1980, 1, 1)).days), "")
-    #split stream at line breaks
+    #split stream at sector breaks
     sector_streams = [[]]
     for entry in stream:
         if isinstance(entry, Break):
@@ -414,8 +401,15 @@ def crew(roster: str, duties: List[T.Duty]=[]
 
 def duties(s: str) -> List[T.Duty]:
     l = lines(s)
-    duties = []
-    for stream in duty_stream(basic_stream(extract_date(l), columns(l))):
+    bstream = basic_stream(extract_date(l), columns(l))
+    duty_streams = [[]]
+    for e in duty_stream(bstream):
+        if e == Break.DUTY:
+            duty_streams.append([])
+        else:
+            duty_streams[-1].append(e)
+    dutylist = []
+    for stream in duty_streams:
         duty = _duty(stream)
-        if duty: duties.append(duty)
-    return duties
+        if duty: dutylist.append(duty)
+    return dutylist
