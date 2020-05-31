@@ -1179,3 +1179,26 @@ class TestCrew(unittest.TestCase):
                               T.CrewMember("Madden Chloe", "FA"))
         }
         self.assertEqual(p.crew("", duties), expected_results)
+
+
+    def test_no_crewtable_or_duties(self):
+        self.test_crew_strings = []
+        self.assertEqual(p.crew("", []), {})
+
+
+    def test_bad_crewstrings(self):
+        self.test_crew_strings = ["", ""]
+        with self.assertRaises(p.CrewFormatException):
+            p.crew("", [])
+        self.test_crew_strings = ["This is not", "a crewstring"]
+        with self.assertRaises(p.CrewFormatException):
+            p.crew("", [])
+        self.test_crew_strings = ['10/04/2019 569,570,6253,6254 FO>']
+        with self.assertRaises(p.CrewFormatException):
+            p.crew("", [])
+        self.test_crew_strings = ['09/04/2019 FO> HUTTON STUART']
+        with self.assertRaises(p.CrewFormatException):
+            p.crew("", [])
+        self.test_crew_strings = ['31/11/2019 All   FO> HUTTON STUART']
+        with self.assertRaises(p.CrewFormatException):
+            p.crew("", [])
