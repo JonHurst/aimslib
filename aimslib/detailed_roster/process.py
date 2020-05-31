@@ -64,6 +64,10 @@ class SectorFormatException(DetailedRosterException):
     "Sector with unexpected format found."
 
 
+class CrewFormatException(DetailedRosterException):
+    "Crew section with unexpected format found."
+
+
 class RosterParser(HTMLParser):
 
     def __init__(self):
@@ -360,6 +364,19 @@ def _clean_name(name: str) -> str:
     return " ".join([X.strip().capitalize() for X in name.split()])
 
 
+def _crew_strings(roster:str) -> List[str]:
+    lines_ = lines(roster)
+    #find header of crew table
+    for c, l in enumerate(lines_):
+        if not l: continue
+        if re.match(r"DATE\s*RTES\s*NAMES", l[0]): break
+    else:
+        return [] #crew table not found
+    if len(lines_) <= c + 1 or not lines_[c + 1][0]:
+        return [] #protects against malformed file
+    return lines_[c + 1][0].replace(" ", " ").splitlines()
+
+
 def crew(roster: str, duties: List[T.Duty]=[]
 ) -> Dict[str, Tuple[T.CrewMember, ...]]:
     """Extract the crew lists from the text of an AIMS detailed roster.
@@ -375,31 +392,25 @@ def crew(roster: str, duties: List[T.Duty]=[]
             if not sector.crewlist_id: continue
             sector_map[key_all].append(sector.crewlist_id)
     retval = {}
-    crew_string = ""
-    ls = lines(roster)
-    for c, l in enumerate(ls):
-        if len(l) == 0: continue
-        mo = re.match(r"DATE\s*RTES\s*NAMES", l[0])
-        if mo:
-            if c + 1 < len(ls):
-                crew_string = ls[c + 1][0].replace(" ", " ")
-            break
-    if crew_string != "":
-        s = re.split("(\d{2}/\d{2}/\d{4})", crew_string)
-        s = [X.strip() for X in s]
-        dates = s[1::2]
-        #entries is a list of lists of the form [[route, role, name, role, name, ...], ...]
-        entries = [re.split(r"\s*(\w{2})> ", X) for X in s[2::2]]
-        for (d, e) in zip(dates, entries):
-            for flight in e[0].split(","):
-                key = f"{d[6:10]}{d[3:5]}{d[0:2]}{flight}~"
-                crew = zip(e[2::2], e[1::2])
-                retval[key] = tuple(
-                    [T.CrewMember(_clean_name(X[0]), X[1]) for X in crew])
-                #add keys for individual sectors where flight is listed as all
-                if key in sector_map:
-                    for id_ in sector_map[key]:
-                        retval[id_] = retval[key]
+    for s in _crew_strings(roster):
+        entries = re.split(r"\s*(\w{2})> ", s)
+        if len(entries) < 3: raise CrewFormatException
+        try:
+            datestr, route = entries[0].split()
+            date = dt.datetime.strptime(datestr, "%d/%m/%Y").date()
+        except ValueError:
+            raise CrewFormatException
+        crewlist = zip(entries[2::2], entries[1::2])
+        crew = tuple([T.CrewMember(_clean_name(X[0]), X[1])
+                      for X in crewlist])
+        if route == "All":
+            key = f"{date:%Y%m%d}All~"
+            for id_ in sector_map.get(key, []):
+                retval[id_] = crew
+        else:
+            for flight in route.split(","):
+                key = f"{date:%Y%m%d}{flight}~"
+                retval[key] = crew
     return retval
 
 

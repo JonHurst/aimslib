@@ -1024,3 +1024,158 @@ class TestDutyStream(unittest.TestCase):
             p.Break.COLUMN]
         with self.assertRaises(p.SectorFormatException):
             p.duty_stream(data)
+
+
+class TestCrew(unittest.TestCase):
+
+    def setUp(self):
+        self.oldfunc = p._crew_strings
+        def fake_crew_strings(_):
+            return self.test_crew_strings
+        p._crew_strings = fake_crew_strings
+
+
+    def tearDown(self):
+        p._crew_strings = self.oldfunc
+
+
+    def test_standard(self):
+        self.test_crew_strings = [
+'09/04/2019 All               FO> HUTTON STUART       PU> WELCH FIONA         FA> CALLACHAN MICHAEL   FA> HAWKINGS KERRIN     FA> LUCAS BETHANY      ',
+'10/04/2019 569,570,6253,6254 FO> VINCENT RICHARD     PU> SIMS GEORGIA        FA> DOUGLAS AYSHA       FA> KIMBERLEY CHRISTOPH FA> VINCENT  LORNA     ',
+'10/04/2019 *6253             CP> RIDLEY LEON SR     ',
+'10/04/2019 *6254             PU> PEACEY EMMA        ',
+'11/04/2019 All               FO> VINCENT RICHARD     PU> SHARRATT CHRISTOPHE FA> KIMBERLEY CHRISTOPH FA> LEWIS ANNA          FA> MADDEN CHLOE       ',
+            ]
+        duties = [
+    T.Duty(
+        T.TripID('14343', ''),
+        datetime.datetime(2019, 4, 9, 15, 30),
+        datetime.datetime(2019, 4, 9, 22, 33),
+        (
+            T.Sector('6073', 'BRS', 'ALC',
+                   datetime.datetime(2019, 4, 9, 16, 27),
+                   datetime.datetime(2019, 4, 9, 18, 55),
+                   datetime.datetime(2019, 4, 9, 16, 27),
+                   datetime.datetime(2019, 4, 9, 18, 55),
+                   None, None, T.SectorFlags.NONE, '201904096073~'),
+            T.Sector('6074', 'ALC', 'BRS',
+                   datetime.datetime(2019, 4, 9, 19, 37),
+                   datetime.datetime(2019, 4, 9, 22, 3),
+                   datetime.datetime(2019, 4, 9, 19, 37),
+                   datetime.datetime(2019, 4, 9, 22, 3),
+                   None, None, T.SectorFlags.NONE, '201904096074~'))),
+    T.Duty(
+        T.TripID('14344', ''),
+        datetime.datetime(2019, 4, 10, 11, 45),
+        datetime.datetime(2019, 4, 10, 22, 6),
+        (
+            T.Sector('6253', 'BRS', 'LIS',
+                     datetime.datetime(2019, 4, 10, 13, 11),
+                     datetime.datetime(2019, 4, 10, 15, 28),
+                     datetime.datetime(2019, 4, 10, 13, 11),
+                     datetime.datetime(2019, 4, 10, 15, 28),
+                     None, None, T.SectorFlags.NONE, '201904106253~'),
+            T.Sector('6254', 'LIS', 'BRS',
+                     datetime.datetime(2019, 4, 10, 16, 17),
+                     datetime.datetime(2019, 4, 10, 18, 45),
+                     datetime.datetime(2019, 4, 10, 16, 17),
+                     datetime.datetime(2019, 4, 10, 18, 45),
+                     None, None, T.SectorFlags, '201904106254~'),
+            T.Sector('570', 'BRS', 'NCL',
+                     datetime.datetime(2019, 4, 10, 19, 12),
+                     datetime.datetime(2019, 4, 10, 20, 13),
+                     datetime.datetime(2019, 4, 10, 19, 12),
+                     datetime.datetime(2019, 4, 10, 20, 13),
+                     None, None, T.SectorFlags.NONE, '20190410570~'),
+            T.Sector('569', 'NCL', 'BRS',
+                     datetime.datetime(2019, 4, 10, 20, 38),
+                     datetime.datetime(2019, 4, 10, 21, 36),
+                     datetime.datetime(2019, 4, 10, 20, 38),
+                     datetime.datetime(2019, 4, 10, 21, 36),
+                     None, None, T.SectorFlags.NONE, '20190410569~'))),
+    T.Duty(
+        T.TripID('14345', ''),
+        datetime.datetime(2019, 4, 11, 11, 20),
+        datetime.datetime(2019, 4, 11, 22, 20),
+        (
+            T.Sector('6241', 'BRS', 'BIO',
+                     datetime.datetime(2019, 4, 11, 12, 15),
+                     datetime.datetime(2019, 4, 11, 13, 54),
+                     datetime.datetime(2019, 4, 11, 12, 15),
+                     datetime.datetime(2019, 4, 11, 13, 54),
+                     None, None, T.SectorFlags.NONE, '201904116241~'),
+            T.Sector('6242', 'BIO', 'BRS',
+                     datetime.datetime(2019, 4, 11, 14, 46),
+                     datetime.datetime(2019, 4, 11, 16, 22),
+                     datetime.datetime(2019, 4, 11, 14, 46),
+                     datetime.datetime(2019, 4, 11, 16, 22),
+                     None, None, T.SectorFlags.NONE, '201904116242~'),
+            T.Sector('6035', 'BRS', 'MAD',
+                     datetime.datetime(2019, 4, 11, 17, 0),
+                     datetime.datetime(2019, 4, 11, 19, 6),
+                     datetime.datetime(2019, 4, 11, 17, 0),
+                     datetime.datetime(2019, 4, 11, 19, 6),
+                     None, None, T.SectorFlags.NONE, '201904116035~'),
+            T.Sector('6036', 'MAD', 'BRS',
+                     datetime.datetime(2019, 4, 11, 19, 44),
+                     datetime.datetime(2019, 4, 11, 21, 50),
+                     datetime.datetime(2019, 4, 11, 19, 44),
+                     datetime.datetime(2019, 4, 11, 21, 50),
+                     None, None, T.SectorFlags.NONE, '201904116036~')))
+        ]
+        expected_results = {
+            '201904096073~': (T.CrewMember("Hutton Stuart", "FO"),
+                              T.CrewMember("Welch Fiona", "PU"),
+                              T.CrewMember("Callachan Michael", "FA"),
+                              T.CrewMember("Hawkings Kerrin", "FA"),
+                              T.CrewMember("Lucas Bethany", "FA")),
+            '201904096074~': (T.CrewMember("Hutton Stuart", "FO"),
+                              T.CrewMember("Welch Fiona", "PU"),
+                              T.CrewMember("Callachan Michael", "FA"),
+                              T.CrewMember("Hawkings Kerrin", "FA"),
+                              T.CrewMember("Lucas Bethany", "FA")),
+            '20190410569~': (T.CrewMember("Vincent Richard", "FO"),
+                             T.CrewMember("Sims Georgia", "PU"),
+                             T.CrewMember("Douglas Aysha", "FA"),
+                             T.CrewMember("Kimberley Christoph", "FA"),
+                             T.CrewMember("Vincent Lorna", "FA")),
+            '20190410570~': (T.CrewMember("Vincent Richard", "FO"),
+                             T.CrewMember("Sims Georgia", "PU"),
+                             T.CrewMember("Douglas Aysha", "FA"),
+                             T.CrewMember("Kimberley Christoph", "FA"),
+                             T.CrewMember("Vincent Lorna", "FA")),
+            '201904106253~': (T.CrewMember("Vincent Richard", "FO"),
+                             T.CrewMember("Sims Georgia", "PU"),
+                             T.CrewMember("Douglas Aysha", "FA"),
+                             T.CrewMember("Kimberley Christoph", "FA"),
+                             T.CrewMember("Vincent Lorna", "FA")),
+            '201904106254~': (T.CrewMember("Vincent Richard", "FO"),
+                             T.CrewMember("Sims Georgia", "PU"),
+                             T.CrewMember("Douglas Aysha", "FA"),
+                             T.CrewMember("Kimberley Christoph", "FA"),
+                             T.CrewMember("Vincent Lorna", "FA")),
+            '20190410*6253~': (T.CrewMember("Ridley Leon Sr", "CP"),),
+            '20190410*6254~': (T.CrewMember("Peacey Emma", "PU"),),
+            '201904116241~': (T.CrewMember("Vincent Richard", "FO"),
+                              T.CrewMember("Sharratt Christophe", "PU"),
+                              T.CrewMember("Kimberley Christoph", "FA"),
+                              T.CrewMember("Lewis Anna", "FA"),
+                              T.CrewMember("Madden Chloe", "FA")),
+            '201904116242~': (T.CrewMember("Vincent Richard", "FO"),
+                              T.CrewMember("Sharratt Christophe", "PU"),
+                              T.CrewMember("Kimberley Christoph", "FA"),
+                              T.CrewMember("Lewis Anna", "FA"),
+                              T.CrewMember("Madden Chloe", "FA")),
+            '201904116035~': (T.CrewMember("Vincent Richard", "FO"),
+                              T.CrewMember("Sharratt Christophe", "PU"),
+                              T.CrewMember("Kimberley Christoph", "FA"),
+                              T.CrewMember("Lewis Anna", "FA"),
+                              T.CrewMember("Madden Chloe", "FA")),
+            '201904116036~': (T.CrewMember("Vincent Richard", "FO"),
+                              T.CrewMember("Sharratt Christophe", "PU"),
+                              T.CrewMember("Kimberley Christoph", "FA"),
+                              T.CrewMember("Lewis Anna", "FA"),
+                              T.CrewMember("Madden Chloe", "FA"))
+        }
+        self.assertEqual(p.crew("", duties), expected_results)
