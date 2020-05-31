@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="aimslib",
-    version="0.0.7",
+    version="0.1",
     author="Jon Hurst",
     author_email="jon.a@hursts.org.uk",
     description="A library for working with AIMS",
@@ -15,8 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=['Beautifulsoup4', 'requests', 'python-dateutil'],
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
-        "Environment :: Console",
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
