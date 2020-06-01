@@ -35,7 +35,7 @@ def csv(duties: List[Duty], crews: Dict[str, List[CrewMember]], fo:bool
             crewstr = "; ".join([f"{X[1]}:{X[0]}" for X in crewlist])
             if (not sector.type_ and len(sector.crewlist_id) > 3
                 and sector.crewlist_id[-3:] in ("319", "320", "321")):
-                sec_dict['Type'] = f"A{sector.crewlist_id[-3:]}"
+                sec_dict['Type'] = f"{sector.crewlist_id[-3:]}"
             sec_dict['Crew'] = crewstr
             writer.writerow(sec_dict)
     output.seek(0)
