@@ -20,8 +20,6 @@ DTEND:{end}\r
 SUMMARY:{route}\r
 {sectors}\
 LAST-MODIFIED:{modified}\r
-SEQUENCE:0\r
-STATUS:TENTATIVE\r
 END:VEVENT"""
 
 ical_datetime = "{:%Y%m%dT%H%M%SZ}"
