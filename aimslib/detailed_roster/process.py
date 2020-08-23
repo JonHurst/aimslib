@@ -184,7 +184,7 @@ def basic_stream(date: dt.date, columns: List[Column]
                 stream.append(Break.LINE)
             elif (len(entry) <= 2 or #ignore single and double letter codes
                   entry[0] == "(" or #ignore any bracketed code
-                  entry == "EZS"): #ignore code indicating an EZS flight
+                  entry in ("EZS", "EJU", "G\xa0EJU")): #EZS/EJU flight codes
                 continue
             #bug workaround: roster uses non-existent time "24:00"
             elif entry == "24:00":
