@@ -253,6 +253,7 @@ def duty_stream(bstream):
     in_sector = False
     for c in range(1, len(dstream) - 1):
         if in_sector:
+            if dstream[c] == Break.LINE: raise SectorFormatException
             if (isinstance(dstream[c], DStr) and
                 isinstance(dstream[c + 1], dt.datetime)): #"from" found
                 in_sector = False
