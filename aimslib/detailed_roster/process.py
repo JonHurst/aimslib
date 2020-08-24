@@ -180,12 +180,9 @@ def basic_stream(date: dt.date, columns: List[Column]
         if col[0] == "": break #column has no header means we're finished
         assert False not in [isinstance(X, str) for X in col[1:]]
         for entry in col[1:]:
-            if entry == "" and not isinstance(stream[-1], Break):
-                stream.append(Break.LINE)
-            elif (len(entry) <= 2 or #ignore single and double letter codes
-                  entry[0] == "(" or #ignore any bracketed code
-                  entry in ("EZS", "EJU", "G\xa0EJU")): #EZS/EJU flight codes
-                continue
+            if entry == "":
+                if not isinstance(stream[-1], Break):
+                    stream.append(Break.LINE)
             #bug workaround: roster uses non-existent time "24:00"
             elif entry == "24:00":
                 stream.append(
@@ -237,20 +234,44 @@ def duty_stream(bstream):
                          if isinstance(X, Break)]
     assert bstream[0] == Break.COLUMN and bstream[-1] == Break.COLUMN
     dstream = bstream[:]
-    #a DStr surrounded by Break objects is an all day duty of some sort
-    for c in range(1, len(bstream) - 1):
-        if (isinstance(bstream[c], DStr) and
-            isinstance(bstream[c - 1], Break) and
-            isinstance(bstream[c + 1], Break)):
-            dstream[c - 1] = Break.DUTY
-            dstream[c + 1] = Break.DUTY
-    #any remaining Break.COLUMN objects with a DStr either side or a datetime
-    #either side are midnight continuations, which should be removed.
+    #Remove single DStr surrounded by Breaks
     for c in range(1, len(dstream) - 1):
-        if (dstream[c] == Break.COLUMN and
-            type(dstream[c - 1]) == type(dstream[c + 1])):
+        if (isinstance(dstream[c], DStr) and
+            isinstance(dstream[c - 1], Break) and
+            isinstance(dstream[c + 1], Break)):
+            dstream[c] = None
+            dstream[c - 1] = None
+    dstream = [X for X in dstream if X]
+
+    #if a dt.datetime follows a column break, remove the break
+    for c in range(1, len(dstream) - 1):
+        if dstream[c] == Break.COLUMN and isinstance(dstream[c + 1], dt.datetime):
             dstream[c] = None
     dstream = [X for X in dstream if X]
+
+    #clean up sector blocks, including column break removal
+    in_sector = False
+    for c in range(1, len(dstream) - 1):
+        if in_sector:
+            if (isinstance(dstream[c], DStr) and
+                isinstance(dstream[c + 1], dt.datetime)): #"from" found
+                in_sector = False
+                #remove any DStr up to next Break object
+                i = c + 2
+                while not isinstance(dstream[i], Break):
+                    if isinstance(dstream[i], DStr):
+                        dstream[i] = None
+                    i += 1
+            else:
+                dstream[c] = None #remove column breaks and extra DStrs
+        else: #not in sector
+            if isinstance(dstream[c], DStr):
+                if isinstance(dstream[c - 1], dt.datetime): #"to" found
+                    in_sector = True
+                elif isinstance(dstream[c - 1], DStr):
+                    dstream[c - 1] = None #remove extra DStrs at start of block
+    dstream = [X for X in dstream if X]
+
     #remaining Break objects are either duty breaks if separated by more
     #than 8 hours, else they are sector breaks
     for c in range(1, len(dstream) - 2):
