@@ -782,12 +782,18 @@ class TestDutyStream(unittest.TestCase):
     def test_standard(self):
         data = [
             p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 21), text='l'),
+            p.DStr(date=datetime.date(2019, 10, 21), text='EJU'),
             p.DStr(date=datetime.date(2019, 10, 21), text='6245'),
             datetime.datetime(2019, 10, 21, 5, 30),
             datetime.datetime(2019, 10, 21, 6, 34),
             p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
             p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
             datetime.datetime(2019, 10, 21, 9, 45),
+            p.DStr(date=datetime.date(2019, 10, 21), text='(320)'),
+            p.DStr(date=datetime.date(2019, 10, 21), text='FO'),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 10, 21), text='M'),
             p.Break.LINE,
             p.DStr(date=datetime.date(2019, 10, 21), text='6246'),
             datetime.datetime(2019, 10, 21, 10, 32),
@@ -839,9 +845,7 @@ class TestDutyStream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 10, 22), text='SPU'),
             p.DStr(date=datetime.date(2019, 10, 22), text='BRS'),
             datetime.datetime(2019, 10, 22, 15, 50),
-            datetime.datetime(2019, 10, 22, 16, 20),
-            p.Break.DUTY,
-            p.DStr(date=datetime.date(2019, 10, 23), text='D/O')]
+            datetime.datetime(2019, 10, 22, 16, 20),]
         self.assertEqual(p.duty_stream(data), expected_result)
 
 
@@ -858,6 +862,9 @@ class TestDutyStream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 5, 18), text='6046'),
             datetime.datetime(2019, 5, 18, 21, 35),
             p.DStr(date=datetime.date(2019, 5, 18), text='PMI'),
+            p.DStr(date=datetime.date(2019, 5, 18), text='(320)'),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 5, 18), text='M'),
             p.Break.COLUMN,
             p.DStr(date=datetime.date(2019, 5, 19), text='BRS'),
             datetime.datetime(2019, 5, 18, 23, 55),
@@ -880,11 +887,7 @@ class TestDutyStream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 5, 18), text='PMI'),
             p.DStr(date=datetime.date(2019, 5, 19), text='BRS'),
             datetime.datetime(2019, 5, 18, 23, 55),
-            datetime.datetime(2019, 5, 19, 0, 25),
-            p.Break.DUTY,
-            p.DStr(date=datetime.date(2019, 5, 19), text='REST'),
-            p.Break.DUTY,
-            p.DStr(date=datetime.date(2019, 5, 20), text='D/O')]
+            datetime.datetime(2019, 5, 19, 0, 25),]
         self.assertEqual(p.duty_stream(data), expected_result)
 
 
@@ -1016,30 +1019,6 @@ class TestDutyStream(unittest.TestCase):
             p.Break.COLUMN,
             p.DStr(date=datetime.date(2019, 4, 28), text='LOE'),
             datetime.datetime(2019, 4, 28, 19, 0),
-            p.Break.COLUMN]
-        with self.assertRaises(p.SectorFormatException):
-            p.duty_stream(data)
-        data = [
-            p.Break.COLUMN,
-            p.DStr(date=datetime.date(2019, 10, 21), text='6245'),
-            datetime.datetime(2019, 10, 21, 5, 30),
-            datetime.datetime(2019, 10, 21, 6, 34),
-            p.Break.COLUMN,#bad column break
-            p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
-            p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
-            datetime.datetime(2019, 10, 21, 9, 45),
-            p.Break.COLUMN]
-        with self.assertRaises(p.SectorFormatException):
-            p.duty_stream(data)
-        data = [
-            p.Break.COLUMN,
-            p.DStr(date=datetime.date(2019, 10, 21), text='6245'),
-            datetime.datetime(2019, 10, 21, 5, 30),
-            datetime.datetime(2019, 10, 21, 6, 34),
-            p.Break.LINE,#bad line break
-            p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
-            p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
-            datetime.datetime(2019, 10, 21, 9, 45),
             p.Break.COLUMN]
         with self.assertRaises(p.SectorFormatException):
             p.duty_stream(data)
