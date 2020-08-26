@@ -23,26 +23,32 @@ class Test_basic_stream(unittest.TestCase):
                 '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']]
         expected_result = [
             p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 21), text='EZS'),
             p.DStr(date=datetime.date(2019, 10, 21), text='6245'),
             datetime.datetime(2019, 10, 21, 5, 30),
             datetime.datetime(2019, 10, 21, 6, 34),
             p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
             p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
             datetime.datetime(2019, 10, 21, 9, 45),
+            p.DStr(date=datetime.date(2019, 10, 21), text='(320)'),
             p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 10, 21), text='EJU'),
             p.DStr(date=datetime.date(2019, 10, 21), text='6246'),
             datetime.datetime(2019, 10, 21, 10, 32),
             p.DStr(date=datetime.date(2019, 10, 21), text='FNC'),
             p.DStr(date=datetime.date(2019, 10, 21), text='BRS'),
             datetime.datetime(2019, 10, 21, 13, 59),
             datetime.datetime(2019, 10, 21, 14, 29),
+            p.DStr(date=datetime.date(2019, 10, 21), text='(320)'),
             p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 10, 22), text='G\xa0EJU'),
             p.DStr(date=datetime.date(2019, 10, 22), text='6205'),
             datetime.datetime(2019, 10, 22, 4, 15),
             datetime.datetime(2019, 10, 22, 5, 12),
             p.DStr(date=datetime.date(2019, 10, 22), text='BRS'),
             p.DStr(date=datetime.date(2019, 10, 22), text='SPU'),
             datetime.datetime(2019, 10, 22, 7, 56),
+            p.DStr(date=datetime.date(2019, 10, 22), text='(320)'),
             p.Break.LINE,
             p.DStr(date=datetime.date(2019, 10, 22), text='6206'),
             datetime.datetime(2019, 10, 22, 13, 16),
@@ -50,6 +56,10 @@ class Test_basic_stream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 10, 22), text='BRS'),
             datetime.datetime(2019, 10, 22, 15, 50),
             datetime.datetime(2019, 10, 22, 16, 20),
+            p.DStr(date=datetime.date(2019, 10, 22), text='(320)'),
+            p.DStr(date=datetime.date(2019, 10, 22), text='FO'),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 10, 22), text='M'),
             p.Break.COLUMN,
             p.DStr(date=datetime.date(2019, 10, 23), text='D/O'),
             p.Break.COLUMN]
@@ -82,6 +92,7 @@ class Test_basic_stream(unittest.TestCase):
              '', '', '', '', '', '', '', '', '']]
         expected_result = [
             p.Break.COLUMN,
+            p.DStr(date=datetime.date(2019, 9, 11), text='l'),
             p.DStr(date=datetime.date(2019, 9, 11), text='6189'),
             datetime.datetime(2019, 9, 11, 5, 20),
             datetime.datetime(2019, 9, 11, 6, 46),
@@ -89,6 +100,7 @@ class Test_basic_stream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 9, 11), text='PSA'),
             datetime.datetime(2019, 9, 11, 8, 46),
             p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 9, 11), text='l'),
             p.DStr(date=datetime.date(2019, 9, 11), text='6190'),
             datetime.datetime(2019, 9, 11, 9, 22),
             p.DStr(date=datetime.date(2019, 9, 11), text='PSA'),
@@ -178,6 +190,8 @@ class Test_basic_stream(unittest.TestCase):
             datetime.datetime(2019, 10, 28, 18, 30),
             datetime.datetime(2019, 10, 28, 22, 30),
             datetime.datetime(2019, 10, 28, 23, 30),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 10, 28), text='M'),
             p.Break.COLUMN,
             p.DStr(date=datetime.date(2019, 10, 29), text='TAXI'),
             datetime.datetime(2019, 10, 29, 10, 30),
@@ -217,6 +231,8 @@ class Test_basic_stream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 4, 29), text='BRS'),
             datetime.datetime(2019, 4, 29, 18, 8),
             datetime.datetime(2019, 4, 29, 18, 23),
+            p.Break.LINE,
+            p.DStr(date=datetime.date(2019, 4, 29), text='M'),
             p.Break.COLUMN]
         self.assertEqual(
             p.basic_stream(datetime.date(2019, 4, 28), data),
@@ -227,7 +243,7 @@ class Test_basic_stream(unittest.TestCase):
         data = [
             [
                 'May27\nSat', '6133', '14:55', '16:01', 'BRS', 'EFL', '19:23', '', '6134', '20:00', 'EFL',
-                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+                '(320)', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
             [
                 'May28\nSun', 'BRS', '23:32', '00:02', '', 'TAXI', '13:15', '13:15', '*BRS', 'XWS', '16:45',
                 '', 'LOEV', '18:15', '22:15', '', 'TAXI', '23:15', '*XWS', 'MAN', '23:45', '23:45', '', '', '',
@@ -244,6 +260,7 @@ class Test_basic_stream(unittest.TestCase):
             p.DStr(date=datetime.date(2017, 5, 27), text='6134'),
             datetime.datetime(2017, 5, 27, 20, 0),
             p.DStr(date=datetime.date(2017, 5, 27), text='EFL'),
+            p.DStr(date=datetime.date(2017, 5, 27), text='(320)'),
             p.Break.COLUMN,
             p.DStr(date=datetime.date(2017, 5, 28), text='BRS'),
             datetime.datetime(2017, 5, 27, 23, 32), #Tricksy bit
@@ -286,6 +303,7 @@ class Test_basic_stream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 5, 17), text='BRS'),
             p.DStr(date=datetime.date(2019, 5, 17), text='FAO'),
             datetime.datetime(2019, 5, 17, 20, 25),
+            p.DStr(date=datetime.date(2019, 5, 17), text='(320)'),
             p.Break.LINE,
             p.DStr(date=datetime.date(2019, 5, 17), text='6002'),
             datetime.datetime(2019, 5, 17, 20, 55),
@@ -293,6 +311,7 @@ class Test_basic_stream(unittest.TestCase):
             p.DStr(date=datetime.date(2019, 5, 17), text='BRS'),
             datetime.datetime(2019, 5, 17, 23, 30),
             datetime.datetime(2019, 5, 18, 0, 0), #tricksy bit
+            p.DStr(date=datetime.date(2019, 5, 17), text='(320)'),
             p.Break.COLUMN]
         self.assertEqual(
             p.basic_stream(datetime.date(2019, 5, 17), data),
