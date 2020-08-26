@@ -1040,6 +1040,7 @@ class TestCrew(unittest.TestCase):
     def test_standard(self):
         self.test_crew_strings = [
 '09/04/2019 All               FO> HUTTON STUART       PU> WELCH FIONA         FA> CALLACHAN MICHAEL   FA> HAWKINGS KERRIN     FA> LUCAS BETHANY      ',
+'                             FA> LINE EXTRA',
 '10/04/2019 569,570,6253,6254 FO> VINCENT RICHARD     PU> SIMS GEORGIA        FA> DOUGLAS AYSHA       FA> KIMBERLEY CHRISTOPH FA> VINCENT  LORNA     ',
 '10/04/2019 *6253             CP> RIDLEY LEON SR     ',
 '10/04/2019 *6254             PU> PEACEY EMMA        ',
@@ -1127,12 +1128,14 @@ class TestCrew(unittest.TestCase):
                               T.CrewMember("Welch Fiona", "PU"),
                               T.CrewMember("Callachan Michael", "FA"),
                               T.CrewMember("Hawkings Kerrin", "FA"),
-                              T.CrewMember("Lucas Bethany", "FA")),
+                              T.CrewMember("Lucas Bethany", "FA"),
+                              T.CrewMember("Line Extra", "FA")),
             '201904096074~': (T.CrewMember("Hutton Stuart", "FO"),
                               T.CrewMember("Welch Fiona", "PU"),
                               T.CrewMember("Callachan Michael", "FA"),
                               T.CrewMember("Hawkings Kerrin", "FA"),
-                              T.CrewMember("Lucas Bethany", "FA")),
+                              T.CrewMember("Lucas Bethany", "FA"),
+                              T.CrewMember("Line Extra", "FA")),
             '20190410569~': (T.CrewMember("Vincent Richard", "FO"),
                              T.CrewMember("Sims Georgia", "PU"),
                              T.CrewMember("Douglas Aysha", "FA"),
@@ -1185,12 +1188,6 @@ class TestCrew(unittest.TestCase):
 
 
     def test_bad_crewstrings(self):
-        self.test_crew_strings = ["", ""]
-        with self.assertRaises(p.CrewFormatException):
-            p.crew("", [])
-        self.test_crew_strings = ["This is not", "a crewstring"]
-        with self.assertRaises(p.CrewFormatException):
-            p.crew("", [])
         self.test_crew_strings = ['10/04/2019 569,570,6253,6254 FO>']
         with self.assertRaises(p.CrewFormatException):
             p.crew("", [])

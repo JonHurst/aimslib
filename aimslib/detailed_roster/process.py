@@ -414,7 +414,17 @@ def crew(roster: str, duties: List[T.Duty]=[]
             if not sector.crewlist_id: continue
             sector_map[key_all].append(sector.crewlist_id)
     retval = {}
+    #Very occasionally there are so many crew that a crew member drops
+    #onto a second line. Normal lines start with dates, so if there is no
+    #digit at the start of the string, concatenate it to the previous one.
+    fixed_strings = ["", ]
     for s in _crew_strings(roster):
+        if not s: continue
+        if s[0].isdigit():
+            fixed_strings.append(s)
+        else:
+            fixed_strings[-1] += s
+    for s in fixed_strings[1:]:
         entries = re.split(r"\s*(\w{2})> ", s)
         if len(entries) < 3: raise CrewFormatException
         try:
