@@ -255,7 +255,7 @@ def duty_stream(bstream):
         if in_sector:
             if dstream[c] == Break.LINE: raise SectorFormatException
             if (isinstance(dstream[c], DStr) and
-                isinstance(dstream[c + 1], dt.datetime)): #"from" found
+                isinstance(dstream[c + 1], dt.datetime)): #"to" found
                 in_sector = False
                 #remove any DStr up to next Break object
                 i = c + 2
@@ -267,7 +267,7 @@ def duty_stream(bstream):
                 dstream[c] = None #remove column breaks and extra DStrs
         else: #not in sector
             if isinstance(dstream[c], DStr):
-                if isinstance(dstream[c - 1], dt.datetime): #"to" found
+                if isinstance(dstream[c - 1], dt.datetime): #"from" found
                     in_sector = True
                 elif isinstance(dstream[c - 1], DStr):
                     dstream[c - 1] = None #remove extra DStrs at start of block
