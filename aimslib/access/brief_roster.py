@@ -9,7 +9,7 @@ from aimslib.common.types import (
 
 
 DEFAULT_FILTER = ["==>", "D/O", "D/OR", "WD/O", "P/T", "LVE", "FTGD",
-                  "REST", "SICK", "SIDO", "SILN", "EXPD"]
+                  "REST", "SICK", "SIDO", "SILN", "EXPD", "GDO"]
 
 
 class RosterEntry(NamedTuple):
