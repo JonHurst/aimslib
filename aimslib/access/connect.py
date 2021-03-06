@@ -47,7 +47,8 @@ def _login(
 
     :raises: requests exceptions.
     """
-    r = session.post(server_url,
+    session.post(server_url) #get cookies
+    r = session.post(server_url + "/wtouch/wtouch.exe/verify",
                      {"Crew_Id": enc_username, "Crm": enc_password},
                      timeout=REQUEST_TIMEOUT)
     if heartbeat: heartbeat()
@@ -97,8 +98,7 @@ def connect(server_url: str, username:str, pw:str, hb: HeartbeatFunc = None
     session.hooks['response'].append(_check_response)
     session.headers.update({
         "User-Agent":
-        "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) "
-        "Gecko/20100101 Firefox/64.0"})
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:86.0) Gecko/20100101 Firefox/86.0"})
     encoded_id = base64.b64encode(username.encode()).decode()
     encoded_pw = hashlib.md5(pw.encode()).hexdigest()
     post_func = _login(session, server_url, encoded_id, encoded_pw, hb)
