@@ -1,15 +1,17 @@
 import csv as libcsv
 import io
+import datetime
 from typing import List, Dict
 
 from aimslib.common.types import Duty, CrewMember, SectorFlags
-
+import nightflight.night as nightcalc
+from nightflight.airport_nvecs import airfields as nvecs
 
 def csv(duties: List[Duty], crews: Dict[str, List[CrewMember]], fo:bool
 ) -> str:
     output = io.StringIO(newline='')
     fieldnames = ['Off Blocks', 'On Blocks', 'Origin', 'Destination',
-                  'Registration', 'Type', 'Captain', 'Role', 'Crew']
+                  'Registration', 'Type', 'Captain', 'Role', 'Crew', 'Night']
     fieldname_map = (('Off Blocks', 'act_start'), ('On Blocks', 'act_finish'),
                      ('Origin', 'from_'), ('Destination', 'to'),
                      ('Registration', 'reg'), ('Type', 'type_'))
@@ -37,6 +39,15 @@ def csv(duties: List[Duty], crews: Dict[str, List[CrewMember]], fo:bool
                 and sector.crewlist_id[-3:] in ("319", "320", "321")):
                 sec_dict['Type'] = f"{sector.crewlist_id[-3:]}"
             sec_dict['Crew'] = crewstr
+            try:
+                night_duration = nightcalc.night_duration(
+                    nvecs[sector.from_], nvecs[sector.to],
+                    sector.act_start, sector.act_finish)
+                duration = (sector.act_finish - sector.act_start).total_seconds() / 60
+                sec_dict['Night'] = round(night_duration / duration, 3)
+            except KeyError: #raised by nvecs if airfields not found
+                sec_dict['Night'] = ""
             writer.writerow(sec_dict)
+
     output.seek(0)
     return output.read()
