@@ -68,7 +68,8 @@ def _login(
         if not recurse: raise AT.LogonError
         logout(post)
         retval = _login(session, server_url, enc_username, enc_password, heartbeat, False)
-    if r.text.find("Please re-enter your Credentials and try again") != -1:
+    if (r.text.find("Please re-enter your Credentials and try again") != -1 or
+        r.text.find("Please swipe your card to log-in") != -1):
         raise AT.UsernamePasswordError
     return retval
 
