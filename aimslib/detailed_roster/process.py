@@ -425,7 +425,7 @@ def crew(roster: str, duties: List[T.Duty]=[]
         else:
             fixed_strings[-1] += s
     for s in fixed_strings[1:]:
-        entries = re.split(r"\s*(\w{2})> ", s)
+        entries = re.split(r"\s*(\w{2})>\w* ", s)
         if len(entries) < 3: raise CrewFormatException
         try:
             datestr, route = entries[0].split()

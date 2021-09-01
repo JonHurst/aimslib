@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="aimslib",
-    version="0.4.post0",
+    version="0.4.1",
     author="Jon Hurst",
     author_email="jon.a@hursts.org.uk",
     description="A library for working with AIMS",
